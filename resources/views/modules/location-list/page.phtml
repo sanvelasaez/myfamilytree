@@ -1,0 +1,22 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Location;
+use Fisharebest\Webtrees\Tree;
+use Illuminate\Support\Collection;
+
+/**
+ * @var Collection<int,Location> $locations
+ * @var string                   $title
+ * @var Tree                     $tree
+ */
+
+?>
+<h2 class="wt-page-title">
+    <?= $title ?>
+</h2>
+
+<div class="wt-page-content">
+    <?= view('lists/locations-table', ['locations' => $locations, 'tree' => $tree]) ?>
+</div>

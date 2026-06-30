@@ -1,0 +1,32 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Http\RequestHandlers\CreateMediaObjectAction;
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var string                   $max_upload_size
+ * @var array<int|string,string> $media_types
+ * @var Tree                     $tree
+ * @var array<string>            $unused_files
+ */
+
+?>
+
+<form method="post" action="<?= e(route(CreateMediaObjectAction::class, ['tree' => $tree->name()])) ?>" id="wt-modal-form">
+    <?= view('modals/header', ['title' => I18N::translate('Create a media object')]) ?>
+
+    <div class="modal-body">
+        <?= view('modals/media-object-fields', ['max_upload_size' => $max_upload_size, 'media_types' => $media_types, 'unused_files' => $unused_files, 'tree' => $tree]) ?>
+    </div>
+
+    <?= view('modals/footer-save-cancel') ?>
+
+    <?= csrf_field() ?>
+</form>
+
+<script>
+  document.getElementById('wt-modal-form').addEventListener('submit', webtrees.createRecordModalSubmit);
+</script>

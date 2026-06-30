@@ -1,0 +1,167 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Http\RequestHandlers\ControlPanel;
+use Fisharebest\Webtrees\Http\RequestHandlers\ImportGedcomAction;
+use Fisharebest\Webtrees\Http\RequestHandlers\ManageTrees;
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Registry;
+use Fisharebest\Webtrees\Tree;
+use Fisharebest\Webtrees\View;
+use Illuminate\Support\Collection;
+
+/**
+ * @var string                 $data_folder
+ * @var string                 $default_gedcom_file
+ * @var Collection<int,string> $gedcom_files
+ * @var string                 $gedcom_media_path
+ * @var string                 $title
+ * @var Tree                   $tree
+ */
+
+?>
+
+<?= view('components/breadcrumbs', ['links' => [route(ControlPanel::class) => I18N::translate('Control panel'), route(ManageTrees::class, ['tree' => $tree->name()]) => I18N::translate('Manage family trees'), $title]]) ?>
+
+<h1><?= $title ?></h1>
+
+<div class="alert alert-warning">
+    <?= /* I18N: %s is the name of a family tree */ I18N::translate('This will delete all the genealogy data from “%s” and replace it with data from a GEDCOM file.', e($tree->title())) ?>
+</div>
+
+<form method="post" action="<?= e(route(ImportGedcomAction::class, ['tree' => $tree->name()])) ?>" enctype="multipart/form-data" onsubmit="return checkGedcomImportForm('<?= e(I18N::translate('You have selected a GEDCOM file with a different name. Is this correct?')) ?>');">
+    <input type="hidden" id="gedcom_file" value="<?= e($default_gedcom_file) ?>">
+
+    <h2><?= I18N::translate('Select a GEDCOM file to import') ?></h2>
+
+    <div class="row mb-3">
+        <label class="col-form-label col-sm-4">
+            <input type="radio" name="source" id="import-client" value="client" checked>
+            <?= I18N::translate('A file on your computer') ?>
+        </label>
+        <div class="col-sm-8">
+            <input id="import-client-file" type="file" name="client_file" class="form-control">
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label class="col-form-label col-sm-4">
+            <input type="radio" name="source" id="import-server" value="server">
+            <?= I18N::translate('A file on the server') ?>
+        </label>
+        <div class="col-sm-8">
+            <div class="input-group" dir="ltr">
+                <span class="input-group-text" dir="ltr">
+                    <?= e($data_folder) ?>
+                </span>
+
+                <select name="server_file" class="form-select" dir="ltr" id="import-server-file">
+                    <option selected="selected" value="">&nbsp;</option>
+                    <?php foreach ($gedcom_files as $gedcom_file) : ?>
+                        <option value="<?= e($gedcom_file) ?>" <?= $gedcom_file === $default_gedcom_file ? 'selected' : '' ?>>
+                            <?= e($gedcom_file) ?>
+                        </option>
+                    <?php endforeach ?>
+                    <?php if ($gedcom_files->isEmpty()) : ?>
+                        <option disabled selected>
+                            <?= I18N::translate('No GEDCOM files found.') ?>
+                        </option>
+                    <?php endif ?>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <h2><?= I18N::translate('Import preferences') ?></h2>
+
+    <div class="row mb-3">
+        <label for="encoding" class="col-sm-3">
+            <?= I18N::translate('Character encoding') ?>
+        </label>
+
+        <div class="col-sm-9">
+            <?= view('components/select', ['name' => 'encoding', 'selected' => '', 'options' => ['' => I18N::translate('automatic')] + Registry::encodingFactory()->list()]) ?>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-sm-3">
+            <?= /* I18N: A configuration setting */ I18N::translate('Keep media objects') ?>
+        </div>
+
+        <div class="col-sm-9">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" name="keep_media" id="keep_media" value="1" <?= $tree->getPreference('keep_media') ? 'checked' : '' ?>>
+                <label for="keep_media" class="form-check-label">
+                    <?= I18N::translate('If you have created media objects in webtrees, and have subsequently edited this GEDCOM file using genealogy software that deletes media objects, then select this option to merge the current media objects with the new GEDCOM file.') ?>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-sm-3">
+            <?= I18N::translate('Add spaces where long lines were wrapped') ?>
+        </div>
+
+        <div class="col-sm-9">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" name="WORD_WRAPPED_NOTES" id="WORD_WRAPPED_NOTES" value="1" <?= $tree->getPreference('WORD_WRAPPED_NOTES') ? 'checked' : '' ?>>
+                <label for="WORD_WRAPPED_NOTES" class="form-check-label">
+                    <?= I18N::translate('If you created this GEDCOM file using genealogy software that omits spaces when splitting long lines, then select this option to reinsert the missing spaces.') ?>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="GEDCOM_MEDIA_PATH" class="col-sm-3">
+            <?= /* I18N: A media path (e.g. c:\aaa\bbb\ccc\ddd.jpeg) in a GEDCOM file */ I18N::translate('Remove the GEDCOM media path from filenames') ?>
+        </label>
+
+        <div class="col-sm-9">
+            <input class="form-control" dir="ltr" id="GEDCOM_MEDIA_PATH" maxlength="255" name="GEDCOM_MEDIA_PATH" type="text" value="<?= e($gedcom_media_path) ?>">
+            <div class="form-text">
+                <?= /* I18N: Help text for the “GEDCOM media path” configuration setting. A “path” is something like “C:\Documents\Genealogy\Photos\John_Smith.jpeg” */ I18N::translate('Some genealogy software creates GEDCOM files that contain media filenames with full paths. These paths will not exist on the web-server. To allow webtrees to find the file, the first part of the path must be removed.') ?>
+                <?= /* I18N: Help text for the “GEDCOM media path” configuration setting. %s are all folder names */ I18N::translate('For example, if the GEDCOM file contains %1$s and webtrees expects to find %2$s in the media folder, then you would need to remove %3$s.', '<code>C:\\Documents\\family\\photo.jpeg</code>', '<code>family/photo.jpeg</code>', '<code>C:\\Documents\\</code>') ?>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <button type="submit" class="btn btn-primary">
+        <?= /* I18N: A button label. */ I18N::translate('continue') ?>
+    </button>
+
+    <?= csrf_field() ?>
+</form>
+
+<?php View::push('javascript') ?>
+<script>
+  function checkGedcomImportForm (message) {
+    let oldFile = $('#gedcom_file').val();
+    let method = $('input[name=source]:checked').val();
+    let newFile = method === 'server' ? $('#import-server-file').val() : $('#import-client-file').val();
+
+    // Some browsers include c:\fakepath\ in the filename.
+    newFile = newFile.replace(/.*[/\\]/, '');
+    if (newFile !== oldFile && oldFile !== '') {
+      return window.confirm(message);
+    } else {
+      return true;
+    }
+  }
+
+  document.getElementById('import-client-file').addEventListener('focus', function () {
+    document.getElementById('import-client').checked = true;
+  });
+
+  document.getElementById('import-server-file').addEventListener('focus', function () {
+    document.getElementById('import-server').checked = true;
+  });
+</script>
+<?php View::endpush() ?>

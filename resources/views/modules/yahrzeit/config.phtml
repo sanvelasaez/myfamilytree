@@ -1,0 +1,46 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+
+/**
+ * @var string               $calendar
+ * @var array<string,string> $calendars
+ * @var string               $days
+ * @var string               $info_style
+ * @var array<string,string> $styles
+ * @var int                  $max_days
+ */
+
+?>
+
+<div class="row mb-3">
+    <label class="col-sm-3 col-form-label" for="days">
+        <?= I18N::translate('Number of days to show') ?>
+    </label>
+    <div class="col-sm-9">
+        <input class="form-control" type="text" id="days" name="days" value="<?= e($days) ?>">
+        <em>
+            <?= I18N::plural('maximum %s day', 'maximum %s days', $max_days, I18N::number($max_days)) ?>
+        </em>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <label class="col-sm-3 col-form-label" for="infoStyle">
+        <?= I18N::translate('Layout') ?>
+    </label>
+    <div class="col-sm-9">
+        <?= view('components/select', ['name' => 'infoStyle', 'selected' => $info_style, 'options' => $styles]) ?>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <label class="col-sm-3 col-form-label" for="calendar">
+        <?= I18N::translate('Calendar') ?>
+    </label>
+    <div class="col-sm-9">
+        <?= view('components/select', ['name' => 'calendar', 'selected' => $calendar, 'options' => $calendars]) ?>
+    </div>
+</div>

@@ -1,0 +1,42 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+
+?>
+
+<div class="row mb-3">
+    <label class="col-form-label col-sm-2" for="submitter-name">
+        <?= I18N::translate('Name') ?>
+    </label>
+    <div class="col-sm-10">
+        <input class="form-control" type="text" id="submitter-name" name="submitter_name" required="required">
+    </div>
+</div>
+<div class="row mb-3">
+    <label class="col-form-label col-sm-2" for="submitter-email">
+        <?= I18N::translate('Email') ?>
+    </label>
+    <div class="col-sm-10">
+        <input class="form-control" type="text" id="submitter-email" name="submitter_email">
+    </div>
+</div>
+<div class="row mb-3">
+    <label class="col-form-label col-sm-2" for="submitter-phone">
+        <?= I18N::translate('Phone') ?>
+    </label>
+    <div class="col-sm-10">
+        <input class="form-control" type="text" id="submitter-phone" name="submitter_phone">
+    </div>
+</div>
+<div class="row mb-3">
+    <label class="col-form-label col-sm-2" for="submitter-address">
+        <?= I18N::translate('Address') ?>
+    </label>
+    <div class="col-sm-10">
+        <input class="form-control" type="text" id="submitter-address" name="submitter_address">
+    </div>
+</div>
+
+<?= view('modals/restriction-fields') ?>

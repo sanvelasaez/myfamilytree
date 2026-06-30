@@ -1,0 +1,47 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Fact;
+use Fisharebest\Webtrees\GedcomRecord;
+use Fisharebest\Webtrees\Http\RequestHandlers\EmptyClipboard;
+use Fisharebest\Webtrees\Http\RequestHandlers\PasteFact;
+use Fisharebest\Webtrees\I18N;
+use Illuminate\Support\Collection;
+
+/**
+ * @var Collection<int,Fact> $clipboard_facts
+ * @var GedcomRecord         $record
+ */
+
+?>
+
+<div class="dropdown-header">
+    <?= I18N::translate('Add from clipboard') ?>
+</div>
+
+<?php foreach ($clipboard_facts as $fact) : ?>
+    <form method="post" class="dropdown-item" action="<?= route(PasteFact::class, ['tree' => $record->tree()->name(), 'xref' => $record->xref()]) ?>">
+        <?= view('icons/copy') ?>
+
+        <input type="hidden" name="fact_id" value="<?= e($fact->id()) ?>">
+
+        <button type="submit" class="btn btn-text p-0 text-truncate" style="max-width: 12rem;" title="<?= strip_tags($fact->name()) ?>">
+            <?= $fact->name() ?>
+        </button>
+
+        <?= csrf_field() ?>
+    </form>
+<?php endforeach ?>
+
+<form method="post" class="dropdown-item" action="<?= route(EmptyClipboard::class) ?>">
+    <input type="hidden" value="<?= e($record->url()) ?>">
+
+    <?= view('icons/delete') ?>
+
+    <button type="submit" class="btn btn-text p-0">
+        <?= I18N::translate('Empty the clipboard') ?>
+    </button>
+
+    <?= csrf_field() ?>
+</form>

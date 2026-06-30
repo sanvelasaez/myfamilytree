@@ -1,0 +1,42 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Individual;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var bool                                                       $is_admin
+ * @var Individual                                                 $individual
+ * @var array<object{block_id:int,title:string,story_body:string}> $stories
+ * @var Tree                                                       $tree
+ */
+
+?>
+
+<div class="wt-tab-stories">
+    <?php foreach ($stories as $story) : ?>
+        <div class="wt-story-title text-center">
+            <h3><?= e($story->title) ?></h3>
+        </div>
+        <div class="wt-story-body">
+            <p><?= $story->story_body ?></p>
+        </div>
+        <?php if ($is_admin) : ?>
+            <p class="wt-story-edit-link">
+                <a href="<?= e(route('module', ['module' => 'stories', 'action' => 'AdminEdit', 'block_id' => $story->block_id, 'tree' => $tree->name(), 'url' => $individual->url()])) ?>">
+                    <?= I18N::translate('Edit the story') ?>
+                </a>
+            </p>
+        <?php endif ?>
+    <?php endforeach ?>
+
+    <?php if ($is_admin && $stories === []) : ?>
+        <p class="wt-story-add-link">
+            <a href="<?= e(route('module', ['module' => 'stories', 'action' => 'AdminEdit', 'xref' => $individual->xref(), 'tree' => $tree->name(), 'url' => $individual->url()])) ?>">
+                <?= I18N::translate('Add a story') ?>
+            </a>
+        </p>
+    <?php endif ?>
+</div>

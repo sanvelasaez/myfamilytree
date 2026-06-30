@@ -1,0 +1,17 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Family;
+
+/**
+ * @var Family $family
+ */
+
+$marriage_date = $family->getMarriageDate();
+
+?>
+<?= $family->fullName() ?>
+<?php if ($marriage_date->isOK()) : ?>
+ — <?= $marriage_date->display() ?>
+<?php endif ?>

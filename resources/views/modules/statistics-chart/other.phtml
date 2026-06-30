@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Statistics;
+
+/**
+ * @var Statistics $statistics
+ */
+
+?>
+
+<div class="container pt-3">
+    <?= $statistics->embedTags(view('modules/statistics-chart/other-records')) ?>
+    <?= $statistics->embedTags(view('modules/statistics-chart/other-events')) ?>
+    <?= $statistics->embedTags(view('modules/statistics-chart/chart-objects')) ?>
+    <?= $statistics->embedTags(view('modules/statistics-chart/chart-sources')) ?>
+    <?= $statistics->embedTags(view('modules/statistics-chart/places')) ?>
+    <?= $statistics->embedTags(view('modules/statistics-chart/chart-distribution')) ?>
+</div>

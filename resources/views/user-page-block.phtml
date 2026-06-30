@@ -1,0 +1,23 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Http\RequestHandlers\UserPageBlock;
+use Fisharebest\Webtrees\Module\ModuleBlockInterface;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var ModuleBlockInterface $block
+ * @var int                  $block_id
+ * @var Tree                 $tree
+ */
+
+?>
+
+<?php if ($block->loadAjax()) : ?>
+    <div data-wt-ajax-url="<?= e(route(UserPageBlock::class, ['tree' => $tree->name(), 'block_id' => $block_id])) ?>">
+        <?= view('icons/spinner') ?>
+    </div>
+<?php else : ?>
+    <?= $block->getBlock($tree, $block_id, ModuleBlockInterface::CONTEXT_USER_PAGE) ?>
+<?php endif ?>

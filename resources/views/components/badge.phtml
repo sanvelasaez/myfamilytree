@@ -1,0 +1,22 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+
+/**
+ * @var string|null $context
+ * @var int         $count
+ * @var int|null    $total
+ */
+
+$total ??= null;
+
+?>
+
+<span class="badge bg-<?= $context ?? 'secondary' ?>">
+        <?= I18N::number($count) ?>
+    <?php if ($total !== null && $total > $count) : ?>
+        / <?= I18N::number($total) ?>
+    <?php endif ?>
+</span>

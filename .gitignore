@@ -1,0 +1,16 @@
+# Configuración con credenciales de BD
+/data/config.ini.php
+
+# Cache — se regenera solo
+/data/cache/
+
+# Archivos subidos por usuarios
+/data/media/
+
+# Logs
+/data/*.log
+/data/logs/
+
+# Temporales
+/data/tmp/
+/data/upload/

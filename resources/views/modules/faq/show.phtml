@@ -1,0 +1,44 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+
+/**
+ * @var array<int,object{
+ *      block_id: int,
+ *      block_order: int,
+ *      gedcom_id: int,
+ *      header: string,
+ *      faqbody: string,
+ *      languages: string
+ *  }>         $faqs
+ * @var string $title
+ */
+
+?>
+
+<h2 class="wt-page-title"><?= $title ?></h2>
+
+<table class="faq">
+    <?php foreach ($faqs as $id => $faq) : ?>
+    <tr>
+        <td style="padding: 5px;">
+            <a href="#faq<?= e($id) ?>"><?= e($faq->header) ?></a>
+        </td>
+    </tr>
+    <?php endforeach ?>
+</table>
+
+<?php foreach ($faqs as $id => $faq) : ?>
+    <hr>
+    <div class="faq_title" id="faq<?= $id ?>">
+        <?= e($faq->header) ?>
+        <div class="faq_top faq_italic">
+            <a href="#content"><?= I18N::translate('back to top') ?></a>
+        </div>
+    </div>
+    <div class="faq_body">
+        <?= str_starts_with($faq->faqbody, '<') ? $faq->faqbody : nl2br(e($faq->faqbody), false) ?>
+    </div>
+<?php endforeach ?>

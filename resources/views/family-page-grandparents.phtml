@@ -1,0 +1,92 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Family;
+use Fisharebest\Webtrees\Http\RequestHandlers\AddParentToIndividualPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\AddSpouseToFamilyPage;
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Individual;
+
+/**
+ * @var Family          $family
+ * @var Individual|null $individual
+ * @var Family|null     $parent_family
+ */
+
+?>
+
+<div class="d-flex my-2">
+    <div class="wt-chart-horizontal-spacer">
+        <div class="wt-chart-horizontal-line"></div>
+    </div>
+    <div class="align-self-center">
+        <div class="d-flex">
+            <div class="wt-chart-horizontal-spacer">
+                <div class="wt-chart-horizontal-first-parent"></div>
+            </div>
+
+            <div class="align-self-center">
+                <?php if ($individual === null) : ?>
+                    <?= view('chart-box', ['individual' => null]) ?>
+                <?php elseif ($parent_family === null) : ?>
+                    <div class="wt-chart-box wt-chart-box-m">
+                        <?php if ($individual->canEdit()) : ?>
+                            <a class="btn btn-link" href="<?= e(route(AddParentToIndividualPage::class, ['tree' => $individual->tree()->name(), 'xref' => $individual->xref(), 'sex' => 'M', 'url' => $family->url()])) ?>">
+                                <?= I18N::translate('Add a father') ?>
+                            </a>
+                        <?php endif ?>
+                    </div>
+                <?php elseif ($parent_family->husband() === null) : ?>
+                    <div class="wt-chart-box wt-chart-box-m">
+                        <?php if ($parent_family->canEdit()) : ?>
+                            <a class="btn btn-link" href="<?= e(route(AddSpouseToFamilyPage::class, ['tree' => $parent_family->tree()->name(), 'xref' => $parent_family->xref(), 'sex' => 'M', 'url' => $family->url()])) ?>">
+                                <?= I18N::translate('Add a father') ?>
+                            </a>
+                        <?php endif ?>
+                    </div>
+                <?php else : ?>
+                    <?= view('chart-box', ['individual' => $parent_family->husband()]) ?>
+                <?php endif ?>
+            </div>
+        </div>
+
+        <div class="d-flex">
+            <div class="wt-chart-horizontal-spacer">
+                <div class="wt-chart-horizontal-last-parent"></div>
+            </div>
+
+            <div class="align-self-center">
+                <?php if ($individual === null) : ?>
+                    <?= view('chart-box', ['individual' => null]) ?>
+                <?php elseif ($parent_family === null) : ?>
+                    <div class="wt-chart-box wt-chart-box-f">
+                        <?php if ($individual->canEdit()) : ?>
+                            <a class="btn btn-link" href="<?= e(route(AddParentToIndividualPage::class, ['tree' => $individual->tree()->name(), 'xref' => $individual->xref(), 'sex' => 'F', 'url' => $family->url()])) ?>">
+                                <?= I18N::translate('Add a mother') ?>
+                            </a>
+                        <?php endif ?>
+                    </div>
+                <?php elseif ($parent_family->wife() === null) : ?>
+                    <div class="wt-chart-box wt-chart-box-f">
+                        <?php if ($parent_family->canEdit()) : ?>
+                            <a class="btn btn-link" href="<?= e(route(AddSpouseToFamilyPage::class, ['tree' => $parent_family->tree()->name(), 'xref' => $parent_family->xref(), 'sex' => 'F', 'url' => $family->url()])) ?>">
+                                <?= I18N::translate('Add a mother') ?>
+                            </a>
+                        <?php endif ?>
+                    </div>
+                <?php else : ?>
+                    <?= view('chart-box', ['individual' => $parent_family->wife()]) ?>
+                <?php endif ?>
+            </div>
+        </div>
+    </div>
+    <?php if ($parent_family !== null) : ?>
+        <div class="align-self-center">
+            <a class="btn btn-text" href="<?= e($parent_family->url()) ?>" title="<?= strip_tags($parent_family->fullName()) ?>">
+                <?= view('icons/arrow-right') ?>
+            </a>
+        </div>
+    <?php endif ?>
+</div>
+

@@ -1,0 +1,89 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+
+/**
+ * @var string     $show_last_update
+ * @var string     $stat_indi
+ * @var string     $stat_surname
+ * @var string     $stat_fam
+ * @var string     $stat_sour
+ * @var string     $stat_media
+ * @var string     $stat_repo
+ * @var string     $stat_events
+ * @var string     $stat_users
+ * @var string     $stat_first_birth
+ * @var string     $stat_last_birth
+ * @var string     $stat_first_death
+ * @var string     $stat_last_death
+ * @var string     $stat_long_life
+ * @var string     $stat_avg_life
+ * @var string     $stat_most_chil
+ * @var string     $stat_avg_chil
+ * @var string     $show_common_surnames
+ * @var string     $number_of_surnames
+ */
+
+?>
+
+<div class="row mb-3">
+    <div class="col-sm-3 col-form-label">
+        <?= I18N::translate('Last change') ?>
+    </div>
+
+    <div class="col-sm-9">
+        <?= view('components/checkbox', ['label' => /* I18N: label for yes/no option */ I18N::translate('Show date of last update'),'name' => 'show_last_update', 'checked' => (bool) $show_last_update]) ?>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-sm-3 col-form-label">
+        <?= I18N::translate('Statistics') ?>
+    </div>
+
+    <div class="col-sm-9">
+        <?= view('components/checkbox', ['label' => I18N::translate('Individuals'), 'name' => 'stat_indi', 'checked' => (bool) $stat_indi]) ?>
+        <?= view('components/checkbox', ['label' => I18N::translate('Total surnames'), 'name' => 'stat_surname', 'checked' => (bool) $stat_surname]) ?>
+        <?= view('components/checkbox', ['label' => I18N::translate('Families'), 'name' => 'stat_fam', 'checked' => (bool) $stat_fam]) ?>
+        <?= view('components/checkbox', ['label' => I18N::translate('Sources'), 'name' => 'stat_sour', 'checked' => (bool) $stat_sour]) ?>
+        <?= view('components/checkbox', ['label' => I18N::translate('Media objects'), 'name' => 'stat_media', 'checked' => (bool) $stat_media]) ?>
+        <?= view('components/checkbox', ['label' => I18N::translate('Repositories'), 'name' => 'stat_repo', 'checked' => (bool) $stat_repo]) ?>
+        <?= view('components/checkbox', ['label' => I18N::translate('Total events'), 'name' => 'stat_events', 'checked' => (bool) $stat_events]) ?>
+        <?= view('components/checkbox', ['label' => I18N::translate('Total users'), 'name' => 'stat_users', 'checked' => (bool) $stat_users]) ?>
+        <?= view('components/checkbox', ['label' => I18N::translate('Earliest birth'), 'name' => 'stat_first_birth', 'checked' => (bool) $stat_first_birth]) ?>
+        <?= view('components/checkbox', ['label' => I18N::translate('Latest birth'), 'name' => 'stat_last_birth', 'checked' => (bool) $stat_last_birth]) ?>
+        <?= view('components/checkbox', ['label' => I18N::translate('Earliest death'), 'name' => 'stat_first_death', 'checked' => (bool) $stat_first_death]) ?>
+        <?= view('components/checkbox', ['label' => I18N::translate('Latest death'), 'name' => 'stat_last_death', 'checked' => (bool) $stat_last_death]) ?>
+        <?= view('components/checkbox', ['label' => I18N::translate('Individual who lived the longest'), 'name' => 'stat_long_life', 'checked' => (bool) $stat_long_life]) ?>
+        <?= view('components/checkbox', ['label' => I18N::translate('Average age at death'), 'name' => 'stat_avg_life', 'checked' => (bool) $stat_avg_life]) ?>
+        <?= view('components/checkbox', ['label' => I18N::translate('Family with the most children'), 'name' => 'stat_most_chil', 'checked' => (bool) $stat_most_chil]) ?>
+        <?= view('components/checkbox', ['label' => I18N::translate('Average number of children per family'), 'name' => 'stat_avg_chil', 'checked' => (bool) $stat_avg_chil]) ?>
+    </div>
+</div>
+
+<div class="mb-3">
+    <div class="row">
+        <div class="col-form-label col-sm-3">
+            <label for="show_common_surnames">
+                <?= I18N::translate('Surnames') ?>
+            </label>
+        </div>
+
+        <div class="col-sm-9">
+            <?= view('components/checkbox', ['label' => I18N::translate('Most common surnames'), 'name' => 'show_common_surnames', 'checked' => (bool) $show_common_surnames]) ?>
+        </div>
+    </div>
+
+    <div class="row">
+        <label class="col-form-label col-sm-3">
+            <label for="number_of_surnames">
+                <?= /* I18N: ... to show in a list */I18N::translate('Number of surnames') ?>
+            </label>
+        </label>
+        <div class="col-sm-9">
+            <input class="form-control" id="number_of_surnames" name="number_of_surnames" min="1" required type="number" value="<?= e($number_of_surnames) ?>">
+        </div>
+    </div>
+</div>

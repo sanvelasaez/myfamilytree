@@ -1,0 +1,23 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Contracts\ElementInterface;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var array<string,ElementInterface> $elements
+ * @var Tree                           $tree
+ */
+?>
+
+<?php foreach ($elements as $id => $element) : ?>
+    <div class="mb-3">
+        <label class="col-form-label" for="<?= e($id) ?>">
+            <?= $element->label() ?>
+        </label>
+        <?= $element->edit($id, $id, '', $tree) ?>
+    </div>
+<?php endforeach ?>
+
+<?= view('modals/restriction-fields') ?>

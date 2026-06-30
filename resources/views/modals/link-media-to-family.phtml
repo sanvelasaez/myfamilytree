@@ -1,0 +1,33 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Http\RequestHandlers\LinkMediaToRecordAction;
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Media;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var Media $media
+ * @var Tree $tree
+ */
+
+?>
+
+<form method="post" action="<?= e(route(LinkMediaToRecordAction::class, ['tree' => $tree->name(), 'xref' => $media->xref()])) ?>" id="wt-modal-form">
+    <?= view('modals/header', ['title' => I18N::translate('Link this media object to a family')]) ?>
+
+    <div class="modal-body">
+        <div class="mb-3">
+            <label class="col-form-label" for="link">
+                <?= I18N::translate('Family') ?>
+            </label>
+            <?= view('components/select-family', ['name' => 'link', 'tree' => $tree]) ?>
+        </div>
+    </div>
+
+    <?= view('modals/footer-save-cancel') ?>
+
+    <?= csrf_field() ?>
+</form>
+

@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+
+/**
+ * @var string $id
+ */
+
+?>
+
+<span class="input-group-text">
+    <a class="wt-osk-trigger" data-wt-id="<?= e($id) ?>" href="#" title="<?= I18N::translate('Find a special character') ?>">
+        <?= view('icons/keyboard') ?>
+        <span class="visually-hidden">
+            <?= I18N::translate('Find a special character') ?>
+        </span>
+    </a>
+</span>

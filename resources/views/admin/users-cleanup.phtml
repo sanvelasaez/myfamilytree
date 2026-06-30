@@ -1,0 +1,84 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Contracts\UserInterface;
+use Fisharebest\Webtrees\Http\RequestHandlers\ControlPanel;
+use Fisharebest\Webtrees\Http\RequestHandlers\UserEditPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\UserListPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\UsersCleanupAction;
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Registry;
+use Illuminate\Support\Collection;
+
+/**
+ * @var Collection<int,UserInterface> $inactive_users
+ * @var string                        $title
+ * @var Collection<int,UserInterface> $unverified_users
+ */
+
+?>
+
+<?= view('components/breadcrumbs', ['links' => [
+    route(ControlPanel::class) => I18N::translate('Control panel'),
+    route(UserListPage::class) => I18N::translate('User administration'),
+    $title,
+]]) ?>
+
+<h1><?= $title ?></h1>
+
+<form method="post" action="<?= e(route(UsersCleanupAction::class)) ?>">
+    <table class="table table-bordered">
+        <?php foreach ($inactive_users as $user) : ?>
+            <tr>
+                <td>
+                    <input type="checkbox" name="delete[]" value="<?= $user->id() ?>" aria-label="<?= e($user->userName()) ?>">
+                </td>
+                <td>
+                    <a href="<?= e(route(UserEditPage::class, ['user_id' => $user->id()])) ?>">
+                        <?= e($user->userName()) ?>
+                        —
+                        <bdi><?= e($user->realName()) ?></bdi>
+                    </a>
+                </td>
+                <td>
+                    <?= I18N::translate('User’s account has been inactive too long: ') ?>
+                    <?= view('components/datetime', ['timestamp' => Registry::timestampFactory()->make(max((int) $user->getPreference(UserInterface::PREF_TIMESTAMP_REGISTERED), (int) $user->getPreference(UserInterface::PREF_TIMESTAMP_ACTIVE)))]) ?>
+                </td>
+            </tr>
+        <?php endforeach ?>
+
+        <?php foreach ($unverified_users as $user) : ?>
+            <tr>
+                <td>
+                    <input type="checkbox" name="delete[]" value="<?= $user->id() ?>" aria-label="<?= e($user->userName()) ?>">
+                </td>
+                <td>
+                    <a href="<?= e(route(UserEditPage::class, ['user_id' => $user->id()])) ?>">
+                        <?= e($user->userName()) ?>
+                        —
+                        <bdi><?= e($user->realName()) ?></bdi>
+                    </a>
+                </td>
+                <td>
+                    <?= I18N::translate('User didn’t verify within 7 days.') ?>
+                    <?php if ($user->getPreference(UserInterface::PREF_IS_ACCOUNT_APPROVED) !== '1') : ?>
+                        <?= I18N::translate('User not verified by administrator.') ?>
+                    <?php endif ?>
+                </td>
+            </tr>
+        <?php endforeach ?>
+    </table>
+
+    <p>
+        <?php if ($inactive_users->isEmpty() && $unverified_users->isEmpty()) : ?>
+            <?= I18N::translate('Nothing found to cleanup') ?>
+        <?php else : ?>
+            <button type="submit" class="btn btn-primary">
+                <?= I18N::translate('delete') ?>
+            </button>
+        <?php endif ?>
+    </p>
+
+    <?= csrf_field() ?>
+</form>

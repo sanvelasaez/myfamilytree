@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Fact;
+use Fisharebest\Webtrees\Http\RequestHandlers\CopyFact;
+use Fisharebest\Webtrees\I18N;
+
+/**
+ * @var Fact $fact
+ */
+
+?>
+
+<a class="btn btn-link btn-sm" href="#" data-wt-post-url="<?= e(route(CopyFact::class, ['tree' => $fact->record()->tree()->name(), 'xref' => $fact->record()->xref(), 'fact_id' => $fact->id()])) ?>" title="<?= I18N::translate('Copy') ?>">
+    <?= view('icons/copy') ?>
+    <span class="visually-hidden"><?= I18N::translate('Copy') ?></span>
+</a>

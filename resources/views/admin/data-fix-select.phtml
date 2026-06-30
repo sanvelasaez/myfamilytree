@@ -1,0 +1,56 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Http\RequestHandlers\ControlPanel;
+use Fisharebest\Webtrees\Http\RequestHandlers\DataFixSelect;
+use Fisharebest\Webtrees\Http\RequestHandlers\ManageTrees;
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Module\ModuleDataFixInterface;
+use Fisharebest\Webtrees\Tree;
+use Illuminate\Support\Collection;
+
+/**
+ * @var Collection<int,ModuleDataFixInterface> $data_fixes
+ * @var string                                 $latest_version
+ * @var string                                 $title
+ * @var Tree                                   $tree
+ */
+
+?>
+
+<?= view('components/breadcrumbs', ['links' => [route(ControlPanel::class) => I18N::translate('Control panel'), route(ManageTrees::class, ['tree' => $tree->name()]) => I18N::translate('Manage family trees'), $title]]) ?>
+
+<h1><?= $title ?></h1>
+
+<form method="post" action="<?= e(route(DataFixSelect::class, ['tree' => $tree->name()])) ?>">
+    <div class="row mb-3">
+        <label class="col-sm-3 col-form-label" for="data_fix">
+            <?= I18N::translate('Data fix') ?>
+        </label>
+        <div class="col-sm-9">
+            <select class="form-select" id="data_fix" name="data_fix" type="text" required="required">
+                <option value=""><?= I18N::translate('&lt;select&gt;') ?></option>
+                <?php foreach ($data_fixes as $data_fix) : ?>
+                    <option value="<?= $data_fix->name() ?>">
+                        <?= $data_fix->title() ?>
+                    </option>
+                <?php endforeach ?>
+            </select>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-sm-3">
+        </div>
+
+        <div class="col-sm-9">
+            <button class="btn btn-primary" type="submit">
+                <?= view('icons/save') ?>
+                <?= I18N::translate('next') ?>
+            </button>
+        </div>
+    </div>
+
+    <?= csrf_field() ?>
+</form>

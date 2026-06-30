@@ -1,0 +1,52 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Auth;
+use Fisharebest\Webtrees\Http\RequestHandlers\DeleteUser;
+use Fisharebest\Webtrees\Http\RequestHandlers\HomePage;
+use Fisharebest\Webtrees\Http\RequestHandlers\Masquerade;
+use Fisharebest\Webtrees\Http\RequestHandlers\UserEditPage;
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\User;
+
+/**
+ * @var User $self
+ * @var User $user
+ */
+
+?>
+
+<div class="dropdown">
+    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" id="edit-user-button-<?= $user->id() ?>" aria-haspopup="true" aria-expanded="false">
+        <?= view('icons/menu') ?>
+    </button>
+    <div class="dropdown-menu" aria-labelledby="edit-user-button-<?= $user->id() ?>">
+        <div class="dropdown-item">
+            <?= view('icons/edit') ?>
+            <a href="<?= e(route(UserEditPage::class, ['user_id' => $user->id()])) ?>">
+                <?= I18N::translate('Edit') ?>
+            </a>
+        </div>
+
+        <div class="divider"></div>
+
+        <?php if ($user->id() !== $self->id()) : ?>
+            <div class="dropdown-item">
+                <?= view('icons/user') ?>
+                <a href="#" data-wt-post-url="<?= e(route(Masquerade::class, ['user_id' => $user->id()])) ?>" data-wt-reload-url="<?= e(route(HomePage::class)) ?>">
+                    <?= I18N::translate('Masquerade as this user') ?>
+                </a>
+            </div>
+
+            <?php if (!Auth::isAdmin($user)) : ?>
+                <div class="dropdown-item">
+                    <?= view('icons/delete') ?>
+                    <a href="#" data-wt-confirm="<?= I18N::translate('Are you sure you want to delete “%s”?', e($user->realName())) ?>" data-wt-post-url="<?= e(route(DeleteUser::class, ['user_id' => $user->id()])) ?>">
+                        <?= I18N::translate('Delete') ?>
+                    </a>
+                </div>
+            <?php endif ?>
+        <?php endif ?>
+    </div>
+</div>

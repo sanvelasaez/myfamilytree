@@ -1,0 +1,37 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Http\RequestHandlers\TomSelectPlace;
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Place;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var Place|null  $place
+ * @var string|null $class
+ * @var string|null $id
+ * @var string      $name
+ * @var Tree        $tree
+ */
+
+?>
+
+<select
+    autocomplete="off"
+    class="form-select tom-select <?= $class ?? '' ?>"
+    data-wt-url="<?= e(route(TomSelectPlace::class, ['tree' => $tree->name(), 'at' => ''])) ?>"
+    data-wt-i18n-no-results="<?= I18N::translate('No results found') ?>"
+    id="<?= e($id ?? $name) ?>"
+    name="<?= e($name) ?>"
+    <?= ($disabled ?? false) ? 'disabled="disabled"' : '' ?>
+    <?= ($required ?? false) ? 'required="required"' : '' ?>
+>
+    <?php if (($place ?? null) instanceof Place && $place->id() !== 0) : ?>
+        <option value="<?= $place->id() ?>">
+            <?= view('selects/place', ['place' => $place]) ?>
+        </option>
+    <?php else : ?>
+        <option value="">&nbsp;</option>
+    <?php endif ?>
+</select>

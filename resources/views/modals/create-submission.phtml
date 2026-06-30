@@ -1,0 +1,29 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Http\RequestHandlers\CreateSubmissionAction;
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var Tree $tree
+ */
+
+?>
+
+<form method="post" action="<?= e(route(CreateSubmissionAction::class, ['tree' => $tree->name()])) ?>" id="wt-modal-form">
+    <?= view('modals/header', ['title' => I18N::translate('Create a submission')]) ?>
+
+    <div class="modal-body">
+        <?= view('modals/submission-fields', ['tree' => $tree]) ?>
+    </div>
+
+    <?= view('modals/footer-save-cancel') ?>
+
+    <?= csrf_field() ?>
+</form>
+
+<script>
+  document.getElementById('wt-modal-form').addEventListener('submit', webtrees.createRecordModalSubmit);
+</script>

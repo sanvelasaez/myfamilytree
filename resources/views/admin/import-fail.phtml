@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var string $error
+ * @var Tree   $tree
+ */
+
+?>
+<div class="alert alert-danger">
+    <?= $error ?>
+</div>
+
+<script>
+  $("#actions<?= e($tree->id()) ?>").removeClass("d-none");
+</script>

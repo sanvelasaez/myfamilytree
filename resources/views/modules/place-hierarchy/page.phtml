@@ -1,0 +1,62 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Place;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var string       $alt_link
+ * @var string       $alt_url
+ * @var array<Place> $breadcrumbs
+ * @var string       $content
+ * @var Place|null   $current
+ * @var string       $events_link
+ * @var Place        $place
+ * @var string       $title
+ * @var Tree         $tree
+ * @var string       $world_url
+ */
+
+?>
+
+<div id="place-hierarchy">
+    <div class="container">
+        <h4><?= $title ?></h4>
+        <h5 class="text-center">
+            <?php if ($current !== null) : ?>
+                <a href="<?= e($world_url) ?>">
+                    <?= I18N::translate('World') ?>
+                </a>
+            <?php else : ?>
+                <?= I18N::translate('World') ?>
+            <?php endif ?>
+
+            <?php foreach ($breadcrumbs as $item) : ?>
+                -
+                <a href="<?= e($item->url()) ?>" dir="auto"><?= $item->placeName() ?></a>
+            <?php endforeach ?>
+
+            <?php if ($current !== null) : ?>
+                - <?= $current->placeName() ?>
+            <?php endif ?>
+        </h5>
+
+        <?= $content ?>
+
+        <div class="text-center">
+            <?php if ($events_link !== '') : ?>
+                <a class="formField" href= <?= e($events_link) ?>>
+                    <?= I18N::translate('View table of events occurring in %s', $place->fullName()) ?>
+                </a>
+                |
+            <?php endif ?>
+
+            <a href="<?= e($alt_url) ?>">
+                <?= $alt_link ?>
+            </a>
+        </div>
+    </div>
+</div>
+

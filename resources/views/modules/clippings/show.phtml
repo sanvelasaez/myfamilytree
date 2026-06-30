@@ -1,0 +1,59 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\GedcomRecord;
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var string              $module
+ * @var array<GedcomRecord> $records
+ * @var string              $title
+ * @var Tree $tree
+ */
+
+?>
+
+<h2 class="wt-page-title"><?= $title ?></h2>
+
+<p>
+    <?= I18N::translate('The clippings cart allows you to take extracts from this family tree and download them as a GEDCOM file.') ?>
+</p>
+
+<?php if ($records === []) : ?>
+<p>
+    <?= I18N::translate('Your clippings cart is empty.') ?>
+</p>
+<?php else : ?>
+    <table class="table wt-facts-table">
+        <thead>
+            <tr>
+                <th><?= I18N::translate('Record') ?></th>
+                <th><?= I18N::translate('Remove') ?></th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($records as $record) : ?>
+                <tr>
+                    <td>
+                        <?= view('icons/record', ['record' => $record]) ?>
+
+                        <a href="<?= e($record->url()) ?>">
+                            <?= $record->fullName() ?>
+                        </a>
+                    </td>
+                    <td>
+                        <form method="post" action="<?= e(route('module', ['module' => $module, 'action' => 'Remove', 'tree' => $tree->name(), 'xref' => $record->xref()])) ?>">
+                            <button type="submit" class="btn btn-link" title="<?= I18N::translate('Remove') ?>">
+                                <?= view('icons/delete') ?>
+                            </button>
+
+                            <?= csrf_field() ?>
+                        </form>
+                    </td>
+                </tr>
+            <?php endforeach ?>
+        </tbody>
+    </table>
+<?php endif ?>

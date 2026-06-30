@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @var string $name
+ * @var string $title
+ * @var string $url
+ */
+
+?>
+<?= view('modals/header', ['title' => $title]) ?>
+
+<div class="modal-body">
+    <a href="<?= e($url) ?>">
+        <?= $name ?>
+    </a>
+</div>
+
+<?= view('modals/footer-close') ?>

@@ -1,0 +1,36 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Individual;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var array<string,string> $charts
+ * @var Individual|null      $individual
+ * @var Tree                 $tree
+ * @var string               $type
+ */
+
+?>
+
+<div class="row mb-3">
+    <label class="col-sm-3 col-form-label" for="type">
+        <?= I18N::translate('Chart type') ?>
+    </label>
+    <div class="col-sm-9">
+        <?= view('components/select', ['name' => 'type', 'selected' => $type, 'options' => $charts]) ?>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <label class="col-sm-3 col-form-label" for="xref">
+        <label for="xref">
+            <?= I18N::translate('Individual') ?>
+        </label>
+    </label>
+    <div class="col-sm-9">
+        <?= view('components/select-individual', ['name' => 'xref', 'individual' => $individual, 'tree' => $tree]) ?>
+    </div>
+</div>

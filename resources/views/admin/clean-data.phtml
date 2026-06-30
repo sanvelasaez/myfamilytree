@@ -1,0 +1,55 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Http\RequestHandlers\ControlPanel;
+use Fisharebest\Webtrees\Http\RequestHandlers\DeletePath;
+use Fisharebest\Webtrees\I18N;
+
+/**
+ * @var array<string> $entries
+ * @var array<string> $protected
+ * @var string        $title
+ */
+
+?>
+
+<?= view('components/breadcrumbs', ['links' => [route(ControlPanel::class) => I18N::translate('Control panel'), $title]]) ?>
+
+<h1><?= $title ?></h1>
+
+<p>
+    <?= I18N::translate('Files marked with %s are required for proper operation and cannot be removed.', view('icons/ban')) ?>
+</p>
+
+<form method="post">
+    <input type="hidden" value="admin-clean-data">
+
+    <ul class="fa-ul mx-0">
+        <?php foreach ($entries as $entry) : ?>
+            <li>
+                <?php if (substr_compare($entry, '/', -1) === 0) : ?>
+                    <?= view('icons/folder') ?>
+                <?php else : ?>
+                     <?= view('icons/file') ?>
+                <?php endif ?>
+                <?= e($entry) ?>
+                <?php if (in_array($entry, $protected, true)) : ?>
+                    <?= view('icons/ban') ?>
+                <?php else : ?>
+                    <a
+                        href="#"
+                        data-wt-confirm="<?= I18N::translate('Are you sure you want to delete “%s”?', e($entry)) ?>"
+                        data-wt-post-url="<?= e(route(DeletePath::class, ['path' => $entry])) ?>"
+                        class="btn btn-sm btn-link"
+                    >
+                        <?= view('icons/delete') ?>
+                        <span class="visually-hidden"><?= I18N::translate('delete') ?></span>
+                    </a>
+                <?php endif ?>
+            </li>
+        <?php endforeach ?>
+    </ul>
+
+    <?= csrf_field() ?>
+</form>

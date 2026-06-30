@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+
+/**
+ * @var string $num
+ */
+
+?>
+
+<div class="row mb-3">
+    <label class="col-sm-3 col-form-label" for="num">
+        <?= /* I18N: ... to show in a list */ I18N::translate('Number of pages') ?>
+    </label>
+    <div class="col-sm-9">
+        <input class="form-control" id="num" name="num" type="number" min="1" value="<?= e($num) ?>" required="required">
+    </div>
+</div>

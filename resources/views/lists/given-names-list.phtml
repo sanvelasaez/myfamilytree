@@ -1,0 +1,23 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+
+/**
+ * @var array<string,int> $given_names
+ * @var bool              $show_totals
+ */
+
+?>
+
+<ul>
+    <?php foreach ($given_names as $given_name => $count) : ?>
+        <li>
+            <bdi><?= e($given_name) ?></bdi>
+            <?php if ($show_totals) : ?>
+             (<?= I18N::number($count) ?>)
+            <?php endif ?>
+        </li>
+    <?php endforeach ?>
+</ul>

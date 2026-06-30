@@ -1,0 +1,51 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Individual;
+use Fisharebest\Webtrees\View;
+
+/**
+ * @var string     $html
+ * @var Individual $individual
+ * @var string     $js
+ * @var string     $title
+ */
+
+?>
+
+<h2 class="wt-page-title">
+    <?= $title ?>
+</h2>
+
+<form method="post" class="wt-page-options wt-page-options-compact-chart d-print-none">
+    <div class="row">
+        <label class="col-sm-3 col-form-label wt-page-options-label" for="xref">
+            <?= I18N::translate('Individual') ?>
+        </label>
+        <div class="col-sm-9 wt-page-options-value">
+            <?= view('components/select-individual', ['name' => 'xref', 'individual' => $individual, 'tree' => $individual->tree(), 'required' => true]) ?>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-sm-3 wt-page-options-label"></div>
+        <div class="col-sm-9 wt-page-options-value">
+            <input class="btn btn-primary" type="submit" value="<?= /* I18N: A button label. */
+            I18N::translate('view') ?>">
+        </div>
+    </div>
+
+    <?= csrf_field() ?>
+</form>
+
+<div class="wt-page-content wt-chart wt-chart-interactive">
+    <?= $html ?>
+</div>
+
+<?php View::push('javascript') ?>
+<script>
+    <?= $js ?>
+</script>
+<?php View::endpush() ?>

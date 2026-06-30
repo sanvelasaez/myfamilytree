@@ -1,0 +1,14 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Timestamp;
+
+/**
+ * @var Timestamp $timestamp
+ */
+?>
+
+<span class="wt-timestamp" title="<?= e($timestamp->isoFormat('LLLL')) ?>" dir="auto">
+    <?= e($timestamp->diffForHumans()) ?>
+</span>

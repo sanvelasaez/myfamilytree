@@ -1,0 +1,82 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Individual;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var string               $ajax_url
+ * @var int                  $generations
+ * @var Individual           $individual
+ * @var int                  $maximum_generations
+ * @var int                  $maximum_width
+ * @var int                  $minimum_generations
+ * @var int                  $minimum_width
+ * @var string               $style
+ * @var array<string,string> $styles
+ * @var string               $title
+ * @var Tree                 $tree
+ * @var int                  $width
+ */
+
+?>
+
+<h2 class="wt-page-title">
+    <?= $title ?>
+</h2>
+
+<form method="post" class="wt-page-options wt-page-options-fan-chart d-print-none">
+    <div class="row">
+        <label class="col-sm-3 col-form-label wt-page-options-label" for="xref">
+            <?= I18N::translate('Individual') ?>
+        </label>
+        <div class="col-sm-9 wt-page-options-value">
+            <?= view('components/select-individual', ['name' => 'xref', 'individual' => $individual, 'tree' => $tree, 'required' => true]) ?>
+        </div>
+    </div>
+
+    <div class="row">
+        <label class="col-sm-3 col-form-label wt-page-options-label" for="style">
+            <?= I18N::translate('Layout') ?>
+        </label>
+        <div class="col-sm-9 wt-page-options-value">
+            <?= view('components/select', ['name' => 'style', 'selected' => $style, 'options' => $styles]) ?>
+        </div>
+    </div>
+
+    <div class="row">
+        <label class="col-sm-3 col-form-label wt-page-options-label" for="generations">
+            <?= I18N::translate('Generations') ?>
+        </label>
+        <div class="col-sm-9 wt-page-options-value">
+            <?= view('components/select-number', ['name' => 'generations', 'selected' => $generations, 'options' => range($minimum_generations, $maximum_generations)]) ?>
+        </div>
+    </div>
+
+    <div class="row">
+        <label class="col-sm-3 col-form-label wt-page-options-label" for="width">
+            <?= I18N::translate('Zoom') ?>
+        </label>
+        <div class="col-sm-9 wt-page-options-value">
+            <div class="input-group">
+                <input class="form-control" id="width" max="<?= $maximum_width ?>" min="<?= $minimum_width ?>" name="width" required="required" type="number" value="<?= $width ?>">
+                <span class="input-group-text">%</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-form-label col-sm-3 wt-page-options-label"></div>
+        <div class="col-sm-9 wt-page-options-value">
+            <input class="btn btn-primary" type="submit" value="<?= /* I18N: A button label. */ I18N::translate('view') ?>">
+        </div>
+    </div>
+
+    <?= csrf_field() ?>
+</form>
+
+<div class="wt-page-content wt-chart wt-chart-fan" data-wt-ajax-url="<?= e($ajax_url) ?>">
+    <?= view('icons/spinner') ?>
+</div>

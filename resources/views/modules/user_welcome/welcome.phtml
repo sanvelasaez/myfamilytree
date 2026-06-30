@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @var array<string,array<string,string>> $links
+ */
+
+?>
+<div class="d-flex flex-wrap justify-content-around">
+    <?php foreach ($links as $link) : ?>
+        <div class="text-center m-1">
+            <a href="<?= e($link['url']) ?>">
+                <span class="<?= $link['class'] ?>"><?= $link['icon'] ?></span>
+                <br>
+                <?= $link['title'] ?>
+            </a>
+        </div>
+    <?php endforeach ?>
+</div>

@@ -1,0 +1,22 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\GedcomRecord;
+use Fisharebest\Webtrees\I18N;
+
+/**
+ * @var array<array{record:GedcomRecord,count:int}> $results
+ */
+
+?>
+<ul class="list-unstyled">
+    <?php foreach ($results as $result) : ?>
+        <li>
+            <span class="badge bg-secondary"><?= I18N::number($result['count']) ?></span>
+            <a href="<?= e($result['record']->url()) ?>">
+                <?= $result['record']->fullName() ?>
+            </a>
+        </li>
+    <?php endforeach ?>
+</ul>

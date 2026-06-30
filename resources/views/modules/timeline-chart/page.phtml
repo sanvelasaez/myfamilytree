@@ -1,0 +1,92 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Individual;
+use Fisharebest\Webtrees\Tree;
+use Illuminate\Support\Collection;
+
+/**
+ * @var string                     $ajax_url
+ * @var Collection<int,Individual> $individuals
+ * @var array<string,string>       $remove_urls
+ * @var string                     $reset_url
+ * @var string                     $title
+ * @var Tree                       $tree
+ * @var string                     $zoom_in_url
+ * @var string                     $zoom_out_url
+ */
+
+?>
+
+<h2 class="wt-page-title">
+    <?= $title ?>
+</h2>
+
+<form method="post" class="wt-page-options wt-page-options-timeline-chart d-print-none">
+    <div class="row">
+        <label class="col-sm-3 col-form-label wt-page-options-label" for="add">
+            <?= I18N::translate('Individual') ?>
+        </label>
+        <div class="col-sm-9 wt-page-options-value">
+            <?= view('components/select-individual', ['name' => 'add', 'id' => 'add', 'tree' => $tree, 'required' => true]) ?>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-form-label col-sm-3 wt-page-options-label"></div>
+        <div class="col-sm-9 wt-page-options-value">
+            <input class="btn btn-primary" type="submit" value="<?= /* I18N: A button label. */
+            I18N::translate('add') ?>">
+            <a class="btn btn-secondary" href="<?= e($reset_url) ?>">
+                <?= /* I18N: A button label. */
+                I18N::translate('reset') ?>
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-form-label col-sm-3 wt-page-options-label"></div>
+        <div class="col-sm-9 wt-page-options-value">
+            <a href="<?= e($zoom_in_url) ?>" title="<?= I18N::translate('Zoom in') ?>">
+                <?= view('icons/zoom-in') ?>
+            </a>
+            <a href="<?= e($zoom_out_url) ?>" title="<?= I18N::translate('Zoom out') ?>">
+                <?= view('icons/zoom-out') ?>
+            </a>
+        </div>
+    </div>
+
+    <?= csrf_field() ?>
+</form>
+
+<div class="row my-4">
+    <?php foreach ($individuals as $n => $individual) : ?>
+        <div class="col-md-6 col-lg-4 col-xl-3 person<?= $n % 8 ?>">
+            <?= view('icons/sex', ['sex' => $individual->sex()]) ?>
+            <a href="<?= e($individual->url()) ?>">
+                <?= $individual->fullName() ?>
+                <?php if ($individual->alternateName() !== null) : ?>
+                    <br>
+                    <?= $individual->alternateName() ?>
+                <?php endif ?>
+            </a>
+            <a href="<?= e($remove_urls[$individual->xref()]) ?>">
+                <?= I18N::translate('Remove individual') ?>
+            </a>
+            <?php if ($individual->getBirthDate()->isOK()) : ?>
+                <br>
+                <label>
+                    <input type="checkbox" name="agebar<?= $n ?>" onclick="$('#agebox<?= $n ?>').toggle();">
+                    <?= /* I18N: an age indicator, which can be dragged around the screen */
+                    I18N::translate('Show an age cursor') ?>
+                </label>
+            <?php endif ?>
+        </div>
+    <?php endforeach ?>
+</div>
+
+<div class="wt-page-content wt-chart wt-timeline-chart" data-wt-ajax-url="<?= e($ajax_url) ?>">
+    <?= view('icons/spinner') ?>
+</div>

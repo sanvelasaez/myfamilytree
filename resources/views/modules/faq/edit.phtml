@@ -1,0 +1,96 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Http\RequestHandlers\ControlPanel;
+use Fisharebest\Webtrees\Http\RequestHandlers\ModulesAllPage;
+use Fisharebest\Webtrees\I18N;
+
+/**
+ * @var int               $block_id
+ * @var int               $block_order
+ * @var string            $body
+ * @var int               $gedcom_id
+ * @var array<int,string> $gedcom_ids
+ * @var string            $header
+ * @var array<string>     $languages
+ * @var string            $title
+ *
+ */
+
+?>
+
+<?= view('components/breadcrumbs', ['links' => [route(ControlPanel::class) => I18N::translate('Control panel'), route(ModulesAllPage::class) => I18N::translate('Modules'), route('module', ['module' => 'faq', 'action' => 'Admin']) => I18N::translate('Frequently asked questions'), $title]]) ?>
+
+<h1><?= $title ?></h1>
+
+<form method="post" name="faq" class="form-horizontal">
+    <input type="hidden" name="block_id" value="<?= $block_id ?>">
+
+    <div class="row mb-3">
+        <label for="header" class="col-sm-3 col-form-label">
+            <?= I18N::translate('Question') ?>
+        </label>
+
+        <div class="col-sm-9">
+            <input type="text" class="form-control" name="header" id="header"
+                value="<?= e($header) ?>">
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="body" class="col-sm-3 col-form-label">
+            <?= I18N::translate('Answer') ?>
+        </label>
+
+        <div class="col-sm-9">
+            <textarea name="body" id="body" class="form-control html-edit" rows="10"><?= e($body) ?></textarea>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="xref" class="col-sm-3 col-form-label">
+            <?= /* I18N: Label for a configuration option */
+            I18N::translate('Show this block for which languages') ?>
+        </label>
+
+        <div class="col-sm-9">
+            <?= view('edit/language-checkboxes', ['languages' => $languages]) ?>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="block_order" class="col-sm-3 col-form-label">
+            <?= I18N::translate('Sort order') ?>
+        </label>
+
+        <div class="col-sm-9">
+            <input type="number" name="block_order" id="block_order" class="form-control" value="<?= $block_order ?>" min="1">
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="gedcom_id" class="col-sm-3 col-form-label">
+            <?= I18N::translate('Family tree') ?>
+        </label>
+
+        <div class="col-sm-9">
+            <?= view('components/select', ['name' => 'gedcom_id', 'selected' => $gedcom_id, 'options' => $gedcom_ids]) ?>
+            <div class="form-text">
+                <?= /* I18N: FAQ = “Frequently Asked Question” */
+                I18N::translate('An FAQ can be displayed on just one of the family trees, or on all the family trees.') ?>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="offset-sm-3 col-sm-9">
+            <button type="submit" class="btn btn-primary">
+                <?= view('icons/save') ?>
+                <?= I18N::translate('save') ?>
+            </button>
+        </div>
+    </div>
+
+    <?= csrf_field() ?>
+</form>

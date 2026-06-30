@@ -1,0 +1,63 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Services\GedcomEditService;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var string            $cancel_url
+ * @var GedcomEditService $gedcom_edit_service
+ * @var string            $label
+ * @var string            $post_url
+ * @var string            $title
+ * @var Tree              $tree
+ */
+
+?>
+
+<h2 class="wt-page-title"><?= $title ?></h2>
+
+<form method="post" action="<?= e($post_url) ?>" class="wt-page-content">
+    <div class="card mb-2">
+        <div class="card-header">
+            <?= $label ?>
+        </div>
+        <div class="card-body pb-1">
+            <?= view('components/select-individual', ['name' => 'spid', 'id' => 'spouse', 'tree' => $tree]) ?>
+        </div>
+    </div>
+
+    <?php foreach ($facts ?? [] as $prefix => $prefix_facts) : ?>
+        <?php foreach ($prefix_facts as $fact) : ?>
+            <div class="card mb-2">
+                <div class="card-header">
+                    <?= $fact->label() ?>
+                </div>
+                <div class="card-body pb-1">
+                    <?= view('edit/edit-gedcom-fields', ['gedcom' => $gedcom_edit_service->insertMissingFactSubtags($fact, false), 'hierarchy' => explode(':', $fact->tag()), 'tree' => $fact->record()->tree(), 'prefix' => $prefix]) ?>
+                </div>
+            </div>
+        <?php endforeach ?>
+    <?php endforeach ?>
+
+    <div class="row mb-3">
+        <div class="col-sm-9 offset-sm-3">
+            <button class="btn btn-primary" type="submit">
+                <?= view('icons/save') ?>
+                <?= /* I18N: A button label. */
+                I18N::translate('save') ?>
+            </button>
+            <a class="btn btn-secondary" href="<?= e($cancel_url) ?>">
+                <?= view('icons/cancel') ?>
+                <?= /* I18N: A button label. */
+                I18N::translate('cancel') ?>
+            </a>
+        </div>
+    </div>
+
+    <?= csrf_field() ?>
+</form>
+
+<?= view('modals/ajax') ?>

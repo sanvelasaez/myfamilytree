@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Fact;
+use Fisharebest\Webtrees\Http\RequestHandlers\EditFactPage;
+use Fisharebest\Webtrees\I18N;
+
+/**
+ * @var Fact        $fact
+ * @var string|null $url
+ */
+
+?>
+
+<a class="btn btn-link btn-sm" href="<?= e(route(EditFactPage::class, ['xref' => $fact->record()->xref(), 'fact_id' => $fact->id(), 'tree' => $fact->record()->tree()->name(), 'url' => $url ?? $fact->record()->url()])) ?>" title="<?= I18N::translate('Edit') ?>">
+    <?= view('icons/edit') ?>
+    <span class="visually-hidden"><?= I18N::translate('Edit') ?></span>
+</a>

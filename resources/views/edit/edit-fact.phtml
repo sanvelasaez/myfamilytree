@@ -1,0 +1,69 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Fact;
+use Fisharebest\Webtrees\Http\RequestHandlers\EditFactAction;
+use Fisharebest\Webtrees\Http\RequestHandlers\EditRawFactPage;
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var bool   $can_edit_raw
+ * @var Fact   $fact
+ * @var string $gedcom
+ * @var string $hidden_url
+ * @var string $title
+ * @var Tree   $tree
+ * @var string $url
+ */
+
+?>
+
+<h2 class="wt-page-title"><?= $title ?></h2>
+
+<form method="post" action="<?= e(route(EditFactAction::class, ['tree' => $tree->name(), 'xref' => $fact->record()->xref(), 'fact_id' => $fact->id()])) ?>" class="wt-page-content">
+    <input type="hidden" name="url" value="<?= e($url) ?>">
+
+    <?= view('edit/edit-gedcom-fields', ['gedcom' => $gedcom, 'hierarchy' => explode(':', $fact->tag()), 'tree' => $fact->record()->tree(), 'prefix' => '']) ?>
+
+    <div class="row mb-3">
+        <div class="col-sm-3 wt-page-options-label">
+        </div>
+        <div class="col-sm-9 wt-page-options-value">
+            <div class="mb-3">
+                <?= view('components/checkbox', ['label' => I18N::translate('Keep the existing “last change” information'), 'name' => 'keep_chan', 'checked' => (bool) $tree->getPreference('NO_UPDATE_CHAN')]) ?>
+            </div>
+
+            <button class="btn btn-primary" type="submit">
+                <?= view('icons/save') ?>
+                <?= /* I18N: A button label. */
+                I18N::translate('save') ?>
+            </button>
+
+            <a class="btn btn-secondary" href="<?= e($url) ?>">
+                <?= view('icons/cancel') ?>
+                <?= /* I18N: A button label. */
+                I18N::translate('cancel') ?>
+            </a>
+
+            <?php if ($hidden_url !== '') : ?>
+                <a class="btn btn-link" href="<?= e($hidden_url) ?>">
+                    <?= I18N::translate('Edit with all GEDCOM tags') ?>
+                </a>
+            <?php endif; ?>
+
+            <?php if ($can_edit_raw) : ?>
+                <a class="btn btn-link" href="<?= e(route(EditRawFactPage::class, ['xref' => $fact->record()->xref(), 'fact_id' => $fact->id(), 'tree' => $tree->name(), 'url' => $url])) ?>">
+                    <?= I18N::translate('Edit the raw GEDCOM') ?>
+                </a>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <?= csrf_field() ?>
+</form>
+
+<?= view('modals/on-screen-keyboard') ?>
+<?= view('modals/ajax') ?>
+<?= view('edit/initialize-calendar-popup') ?>

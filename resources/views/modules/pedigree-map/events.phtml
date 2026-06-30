@@ -1,0 +1,41 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Fact;
+
+/**
+ * @var string $class
+ * @var Fact   $fact
+ * @var string $relationship
+ * @var int    $sosa
+ */
+
+?>
+<div class="d-flex justify-content-between">
+    <div>
+        <div>
+            <a href="#" data-wt-sosa="<?= $sosa ?>">
+                <span class="<?= $class ?>"><?= view('icons/location') ?></span>
+                <?= $relationship ?>
+            </a>
+        </div>
+
+        <div>
+            <a href="<?= e($fact->record()->url()) ?>">
+                <?= $fact->record()->fullName() ?>
+            </a>
+        </div>
+
+        <div>
+            <?= $fact->label() ?>: <?= $fact->date()->display($fact->record()->tree()) ?>
+        </div>
+
+        <div>
+            <?= $fact->place()->fullName(true) ?>
+        </div>
+    </div>
+    <div class="d-none d-lg-block">
+        <?= $fact->record()->displayImage(40, 50, 'crop', ['class' => 'wt-pedigree-map-thumbnail']) ?>
+    </div>
+</div>

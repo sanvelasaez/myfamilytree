@@ -1,0 +1,46 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var array<string> $download_filenames
+ * @var string        $module
+ * @var string        $title
+ * @var Tree          $tree
+ * @var bool          $zip_available
+ */
+
+?>
+
+<h2 class="wt-page-title"><?= $title ?></h2>
+
+<form method="post" action="<?= e(route('module', ['module' => $module, 'action' => 'Download', 'tree' => $tree->name()])) ?>" class="wt-page-options wt-page-options-clippings-download hidden-print">
+    <div class="row">
+        <div class="col-sm-3 col-form-label wt-page-options-label">
+            <?= I18N::translate('Export preferences') ?>
+        </div>
+        <div class="col-sm-9 wt-page-options-value">
+            <?= view('admin/gedcom-export-options', ['download_filenames' => $download_filenames, 'tree' => $tree, 'zip_available' => $zip_available]) ?>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-3 col-form-label wt-page-options-label">
+        </div>
+        <div class="col-sm-9 wt-page-options-value">
+            <button type="submit" class="btn btn-primary">
+                <?= view('icons/download') ?>
+                <?= I18N::translate('download') ?>
+            </button>
+            <a href="<?= e(route('module', ['module' => $module, 'action' => 'Show', 'tree' => $tree->name()])) ?>" class="btn btn-secondary">
+                <?= view('icons/cancel') ?>
+                <?= I18N::translate('cancel') ?>
+            </a>
+        </div>
+    </div>
+
+    <?= csrf_field() ?>
+</form>

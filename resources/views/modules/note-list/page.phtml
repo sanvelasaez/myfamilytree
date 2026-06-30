@@ -1,0 +1,22 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Note;
+use Fisharebest\Webtrees\Tree;
+use Illuminate\Support\Collection;
+
+/**
+ * @var Collection<int,Note> $notes
+ * @var string               $title
+ * @var Tree                 $tree
+ */
+
+?>
+<h2 class="wt-page-title">
+    <?= $title ?>
+</h2>
+
+<div class="wt-page-content">
+    <?= view('lists/notes-table', ['notes' => $notes, 'tree' => $tree]) ?>
+</div>

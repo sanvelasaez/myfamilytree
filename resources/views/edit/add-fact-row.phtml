@@ -1,0 +1,58 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\GedcomRecord;
+use Fisharebest\Webtrees\Http\RequestHandlers\AddNewFact;
+use Fisharebest\Webtrees\Http\RequestHandlers\SelectNewFact;
+use Fisharebest\Webtrees\I18N;
+
+/**
+ * @var array<string,string> $add_facts
+ * @var array<string,string> $quick_facts
+ * @var GedcomRecord         $record
+ */
+
+?>
+
+<tr>
+    <th scope="row">
+        <label for="add-fact">
+            <?= I18N::translate('Add a fact') ?>
+        </label>
+    </th>
+    <td>
+        <?php if ($add_facts !== []) : ?>
+            <form method="post" action="<?= e(route(SelectNewFact::class, ['tree' => $record->tree()->name(), 'xref' => $record->xref()])) ?>" onsubmit="if ($('#add-fact').val() === null) {event.preventDefault();}">
+                <div class="input-group">
+                    <select class="form-select" id="add-fact" name="fact">
+                        <option value="" disabled selected>
+                            <?= I18N::translate('&lt;select&gt;') ?>
+                        </option>
+                        <?php foreach ($add_facts as $fact => $label) : ?>
+                            <option value="<?= $fact ?>"><?= $label ?></option>
+                        <?php endforeach ?>
+                    </select>
+
+                    <button class="btn btn-primary" type="submit">
+                        <?= /* I18N: A button label. */ I18N::translate('add') ?>
+                    </button>
+                </div>
+
+                <?= csrf_field() ?>
+            </form>
+        <?php endif ?>
+
+        <div class="wt-quick-facts">
+            <?php foreach ($quick_facts as $fact => $label) : ?>
+                <a class="btn btn-link wt-quick-fact" href="<?= e(route(AddNewFact::class, [
+                    'fact' => $fact,
+                    'xref' => $record->xref(),
+                    'tree' => $record->tree()->name(),
+                ])) ?>">
+                    <?= $label ?>
+                </a>
+            <?php endforeach ?>
+        </div>
+    </td>
+</tr>

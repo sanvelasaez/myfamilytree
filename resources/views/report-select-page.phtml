@@ -1,0 +1,46 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Module\ModuleReportInterface;
+use Illuminate\Support\Collection;
+
+/**
+ * @var Collection<int,ModuleReportInterface> $reports
+ * @var string                                $title
+ */
+
+?>
+
+<h2 class="wt-page-title">
+    <?= $title ?>
+</h2>
+
+<form method="post" class="wt-page-options wt-page-options-report-select">
+    <div class="row">
+        <label class="col-sm-3 col-form-label wt-page-options-label" for="report">
+            <?= I18N::translate('Report') ?>
+        </label>
+        <div class="col-sm-9 wt-page-options-value">
+            <select class="form-select" id="report" name="report">
+                <?php foreach ($reports as $report) : ?>
+                    <option value="<?= e($report->name()) ?>">
+                        <?= e($report->title()) ?>
+                    </option>
+                <?php endforeach ?>
+            </select>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-3 col-form-label wt-page-options-label"></div>
+        <div class="col-sm-9 wt-page-options-value">
+            <button type="submit" class="btn btn-primary">
+                <?= I18N::translate('continue') ?>
+            </button>
+        </div>
+    </div>
+
+    <?= csrf_field() ?>
+</form>

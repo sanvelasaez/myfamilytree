@@ -1,0 +1,48 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+
+/**
+ * @var array<string,int>        $given_names
+ * @var array<array<int,string>> $order
+ */
+
+?>
+
+<table
+    id="wt-datatables-given-names"
+    class="table table-bordered table-sm wt-table-given-name datatables d-none"
+    <?= view('lists/datatables-attributes') ?>
+    data-info="false"
+    data-paging="false"
+    data-searching="false"
+    data-order="<?= e(json_encode($order, JSON_THROW_ON_ERROR)) ?>"
+>
+    <caption class="visually-hidden">
+        <?= I18N::translate('Given names') ?>
+    </caption>
+    <thead>
+        <tr>
+            <th>
+                <?= I18N::translate('Given name') ?>
+            </th>
+            <th>
+                <?= I18N::translate('Individuals') ?>
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($given_names as $given_name => $count) : ?>
+        <tr>
+            <td>
+                <?= e($given_name) ?>
+            </td>
+            <td>
+                <?= I18N::number($count) ?>
+            </td>
+        </tr>
+        <?php endforeach ?>
+    </tbody>
+</table>

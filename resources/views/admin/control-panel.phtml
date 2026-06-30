@@ -1,0 +1,870 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Contracts\TimestampInterface;
+use Fisharebest\Webtrees\Http\RequestHandlers\BroadcastPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\CheckForNewVersionNow;
+use Fisharebest\Webtrees\Http\RequestHandlers\CleanDataFolder;
+use Fisharebest\Webtrees\Http\RequestHandlers\ControlPanel;
+use Fisharebest\Webtrees\Http\RequestHandlers\CreateTreePage;
+use Fisharebest\Webtrees\Http\RequestHandlers\EmailPreferencesPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\FixLevel0MediaPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\ManageMediaPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\ManageTrees;
+use Fisharebest\Webtrees\Http\RequestHandlers\MapDataList;
+use Fisharebest\Webtrees\Http\RequestHandlers\MergeTreesPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\ModulesAllPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\ModulesAnalyticsPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\ModulesBlocksPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\ModulesChartsPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\ModulesDataFixesPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\ModulesFootersPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\ModulesHistoricEventsPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\ModulesLanguagesPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\ModulesListsPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\ModulesMapAutocompletePage;
+use Fisharebest\Webtrees\Http\RequestHandlers\ModulesMapGeoLocationsPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\ModulesMapLinksPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\ModulesMapProvidersPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\ModulesMenusPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\ModulesReportsPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\ModulesSharesPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\ModulesSidebarsPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\ModulesTabsPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\ModulesThemesPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\PendingChanges;
+use Fisharebest\Webtrees\Http\RequestHandlers\PhpInformation;
+use Fisharebest\Webtrees\Http\RequestHandlers\SiteLogsPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\SitePreferencesPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\SiteRegistrationPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\SiteTagsPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\TreePageDefaultEdit;
+use Fisharebest\Webtrees\Http\RequestHandlers\UpgradeWizardPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\UploadMediaPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\UserAddPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\UserEditPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\UserListPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\UserPageDefaultEdit;
+use Fisharebest\Webtrees\Http\RequestHandlers\UsersCleanupPage;
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Module\FamilyListModule;
+use Fisharebest\Webtrees\Module\IndividualListModule;
+use Fisharebest\Webtrees\Module\MediaListModule;
+use Fisharebest\Webtrees\Module\ModuleAnalyticsInterface;
+use Fisharebest\Webtrees\Module\ModuleBlockInterface;
+use Fisharebest\Webtrees\Module\ModuleChartInterface;
+use Fisharebest\Webtrees\Module\ModuleConfigInterface;
+use Fisharebest\Webtrees\Module\ModuleCustomInterface;
+use Fisharebest\Webtrees\Module\ModuleDataFixInterface;
+use Fisharebest\Webtrees\Module\ModuleFooterInterface;
+use Fisharebest\Webtrees\Module\ModuleHistoricEventsInterface;
+use Fisharebest\Webtrees\Module\ModuleInterface;
+use Fisharebest\Webtrees\Module\ModuleLanguageInterface;
+use Fisharebest\Webtrees\Module\ModuleListInterface;
+use Fisharebest\Webtrees\Module\ModuleMapAutocompleteInterface;
+use Fisharebest\Webtrees\Module\ModuleMapGeoLocationInterface;
+use Fisharebest\Webtrees\Module\ModuleMapLinkInterface;
+use Fisharebest\Webtrees\Module\ModuleMapProviderInterface;
+use Fisharebest\Webtrees\Module\ModuleMenuInterface;
+use Fisharebest\Webtrees\Module\ModuleReportInterface;
+use Fisharebest\Webtrees\Module\ModuleShareInterface;
+use Fisharebest\Webtrees\Module\ModuleSidebarInterface;
+use Fisharebest\Webtrees\Module\ModuleTabInterface;
+use Fisharebest\Webtrees\Module\ModuleThemeInterface;
+use Fisharebest\Webtrees\Module\NoteListModule;
+use Fisharebest\Webtrees\Module\RepositoryListModule;
+use Fisharebest\Webtrees\Module\SourceListModule;
+use Fisharebest\Webtrees\Module\SubmitterListModule;
+use Fisharebest\Webtrees\Tree;
+use Fisharebest\Webtrees\User;
+use Fisharebest\Webtrees\Webtrees;
+use Illuminate\Support\Collection;
+
+/**
+ * @var Collection<int,User>                           $administrators
+ * @var Collection<int,ModuleInterface>                $all_modules_disabled
+ * @var Collection<int,ModuleInterface>                $all_modules_enabled
+ * @var Collection<int,Tree>                           $all_trees
+ * @var Collection<int,User>                           $all_users
+ * @var Collection<int,ModuleAnalyticsInterface>       $analytics_modules_disabled
+ * @var Collection<int,ModuleAnalyticsInterface>       $analytics_modules_enabled
+ * @var Collection<int,ModuleBlockInterface>           $block_modules_disabled
+ * @var Collection<int,ModuleBlockInterface>           $block_modules_enabled
+ * @var array<int,int>                                 $changes
+ * @var Collection<int,ModuleChartInterface>           $chart_modules_disabled
+ * @var Collection<int,ModuleChartInterface>           $chart_modules_enabled
+ * @var Collection<int,ModuleCustomInterface>          $custom_updates
+ * @var Collection<int,ModuleDataFixInterface>         $data_fix_modules_disabled
+ * @var Collection<int,ModuleDataFixInterface>         $data_fix_modules_enabled
+ * @var Collection<array-key,int>                      $families
+ * @var FamilyListModule|null                          $family_list_module
+ * @var list<string>                                   $files_to_delete
+ * @var Collection<int,ModuleFooterInterface>          $footer_modules_disabled
+ * @var Collection<int,ModuleFooterInterface>          $footer_modules_enabled
+ * @var Collection<int,ModuleHistoricEventsInterface>  $history_modules_disabled
+ * @var Collection<int,ModuleHistoricEventsInterface>  $history_modules_enabled
+ * @var Collection<array-key,int>                      $individuals
+ * @var IndividualListModule|null                      $individual_list_module
+ * @var Collection<int,ModuleLanguageInterface>        $language_modules_disabled
+ * @var Collection<int,ModuleLanguageInterface>        $language_modules_enabled
+ * @var string                                         $latest_version
+ * @var string                                         $latest_version_error
+ * @var TimestampInterface                             $latest_version_timestamp
+ * @var Collection<int,ModuleListInterface>            $list_modules_disabled
+ * @var Collection<int,ModuleListInterface>            $list_modules_enabled
+ * @var Collection<int,ModuleMapLinkInterface>         $map_link_modules_disabled
+ * @var Collection<int,ModuleMapLinkInterface>         $map_link_modules_enabled
+ * @var Collection<int,ModuleMapAutocompleteInterface> $map_autocomplete_modules_disabled
+ * @var Collection<int,ModuleMapAutocompleteInterface> $map_autocomplete_modules_enabled
+ * @var Collection<int,ModuleMapProviderInterface>     $map_provider_modules_disabled
+ * @var Collection<int,ModuleMapProviderInterface>     $map_provider_modules_enabled
+ * @var Collection<int,ModuleMapGeoLocationInterface>  $map_search_modules_disabled
+ * @var Collection<int,ModuleMapGeoLocationInterface>  $map_search_modules_enabled
+ * @var Collection<int,User>                           $managers
+ * @var Collection<array-key,int>                      $media
+ * @var MediaListModule|null                           $media_list_module
+ * @var Collection<int,ModuleMenuInterface>            $menu_modules_disabled
+ * @var Collection<int,ModuleMenuInterface>            $menu_modules_enabled
+ * @var Collection<int,User>                           $moderators
+ * @var Collection<array-key,int>                      $notes
+ * @var NoteListModule|null                            $note_list_module
+ * @var Collection<int,ModuleInterface>                $other_modules
+ * @var array<string,string>                           $recipients
+ * @var Collection<int,ModuleReportInterface>          $report_modules_disabled
+ * @var Collection<int,ModuleReportInterface>          $report_modules_enabled
+ * @var Collection<array-key,int>                      $repositories
+ * @var RepositoryListModule|null                      $repository_list_module
+ * @var Collection<int,string>                         $server_errors
+ * @var Collection<int,string>                         $server_warnings
+ * @var bool                                           $show_synchronize
+ * @var Collection<int,ModuleShareInterface>           $share_modules_disabled
+ * @var Collection<int,ModuleShareInterface>           $share_modules_enabled
+ * @var Collection<int,ModuleSidebarInterface>         $sidebar_modules_disabled
+ * @var Collection<int,ModuleSidebarInterface>         $sidebar_modules_enabled
+ * @var Collection<array-key,int>                      $sources
+ * @var SourceListModule|null                          $source_list_module
+ * @var Collection<array-key,int>                      $submitters
+ * @var SubmitterListModule|null                       $submitter_list_module
+ * @var Collection<int,ModuleTabInterface>             $tab_modules_disabled
+ * @var Collection<int,ModuleTabInterface>             $tab_modules_enabled
+ * @var Collection<int,ModuleThemeInterface>           $theme_modules_disabled
+ * @var Collection<int,ModuleThemeInterface>           $theme_modules_enabled
+ * @var string                                         $title
+ * @var Collection<int,User>                           $unapproved
+ * @var Collection<int,User>                           $unverified
+ */
+
+?>
+
+<h1><?= $title ?></h1>
+
+<!-- WEBSITE / WEBTREES -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h2 class="mb-0">
+            <?= I18N::translate('Website') ?>
+            <span class="badge bg-secondary" dir="ltr">
+                <?= e(Webtrees::VERSION) ?>
+            </span>
+        </h2>
+    </div>
+    <div class="card-body">
+        <?php foreach ($server_errors as $server_error) : ?>
+            <p class="alert alert-danger"><?= $server_error ?></p>
+        <?php endforeach ?>
+
+        <?php foreach ($server_warnings as $server_warning) : ?>
+            <p class="alert alert-warning"><?= $server_warning ?></p>
+        <?php endforeach ?>
+
+        <p class="card-text">
+            <?= /* I18N: %s is a URL/link to the project website */
+            I18N::translate('Support and documentation can be found at %s.', '<a href="https://webtrees.net/">webtrees.net</a>') ?>
+        </p>
+
+        <?php if ($latest_version_error !== '') : ?>
+            <p class="alert alert-danger">
+                <?= I18N::translate('There was an error checking for a new version.') ?>
+                <br>
+                <?= $latest_version_error ?>
+                <br>
+                <?= /* I18N: Last checked X hours ago. */ I18N::translate('Last checked %s.', $latest_version_timestamp->diffForHumans()) ?>
+                <a href="#" class="btn btn-primary" data-wt-post-url="<?= e(route(CheckForNewVersionNow::class)) ?>">
+                    <?= /* I18N: button label */ I18N::translate('check now') ?>
+                </a>
+            </p>
+        <?php elseif ($latest_version === '') : ?>
+            <p class="card-text">
+                <?= I18N::translate('No upgrade information is available.') ?>
+            </p>
+        <?php elseif (version_compare(Webtrees::VERSION, $latest_version) < 0) : ?>
+            <p class="card-text alert alert-info">
+                <?= I18N::translate('A new version of webtrees is available.') ?>
+                <a href="<?= e(route(UpgradeWizardPage::class)) ?>" class="alert-link">
+                    <?= /* I18N: %s is a version number */
+                    I18N::translate('Upgrade to webtrees %s.', e($latest_version)) ?>
+                </a>
+            </p>
+        <?php else : ?>
+            <p class="card-text">
+                <?= I18N::translate('This is the latest version of webtrees. No upgrade is available.') ?>
+                <?= /* I18N: Last checked X hours ago. */ I18N::translate('Last checked %s.', $latest_version_timestamp->diffForHumans()) ?>
+                <?php if ($latest_version_timestamp->timestamp() + 60 < time()) : ?>
+                    <a href="#" class="btn btn-primary" data-wt-post-url="<?= e(route(CheckForNewVersionNow::class)) ?>">
+                        <?= /* I18N: button label */ I18N::translate('check now') ?>
+                    </a>
+                <?php endif ?>
+            </p>
+        <?php endif ?>
+
+        <?php foreach ($custom_updates as $module) : ?>
+        <div class="alert alert-info">
+            <?= view('icons/information') ?>
+            <?= I18N::translate('An upgrade is available.') ?>
+            <br>
+            <?= $module->title() ?> — <?= e($module->customModuleVersion()) ?> — <?= e($module->customModuleLatestVersion()) ?>
+            <?php if ($module->customModuleSupportUrl() !== '') : ?>
+                <br>
+                <?= I18N::translate('For more information, see %s.', '<a href="' . e($module->customModuleSupportUrl()) . '">' . e($module->customModuleSupportUrl()) . '</a>') ?>
+            <?php endif ?>
+        </div>
+        <?php endforeach ?>
+
+        <div class="row">
+            <div class="col-sm">
+                <ul class="fa-ul mx-0">
+                    <li>
+                        <span class="fa-li"><?= view('icons/preferences') ?></span>
+                        <a href="<?= e(route(SitePreferencesPage::class)) ?>">
+                            <?= I18N::translate('Website preferences') ?>
+                        </a>
+                    </li>
+                    <li>
+                        <span class="fa-li"><?= view('icons/email') ?></span>
+                        <a href="<?= e(route(EmailPreferencesPage::class)) ?>">
+                            <?= I18N::translate('Sending email') ?>
+                        </a>
+                    </li>
+                    <li>
+                        <span class="fa-li"><?= view('icons/user') ?></span>
+                        <a href="<?= e(route(SiteRegistrationPage::class)) ?>">
+                            <?= I18N::translate('Sign-in and registration') ?>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-sm">
+                <ul class="fa-ul mx-0">
+                    <li>
+                        <span class="fa-li"><?= view('icons/list') ?></span>
+                        <a href="<?= e(route(SiteLogsPage::class)) ?>">
+                            <?= I18N::translate('Website logs') ?>
+                        </a>
+                    </li>
+                    <li>
+                        <span class="fa-li"><?= view('icons/delete') ?></span>
+                        <a href="<?= e(route(CleanDataFolder::class)) ?>">
+                            <?= I18N::translate('Clean up data folder') ?>
+                        </a>
+                    </li>
+                    <li>
+                        <span class="fa-li"><?= view('icons/server') ?></span>
+                        <a href="<?= e(route(PhpInformation::class)) ?>">
+                            <?= I18N::translate('Server information') ?>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-sm">
+                <ul class="fa-ul mx-0">
+                    <li>
+                        <span class="fa-li"><?= view('icons/tag') ?></span>
+                        <a href="<?= e(route(SiteTagsPage::class)) ?>">
+                            <?= I18N::translate('GEDCOM tags') ?>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FAMILY TREES -->
+<div class="card mb-4 <?= array_sum($changes) ? 'card-outline-danger' : '' ?>">
+    <div class="card-header">
+        <h2 class="mb-0">
+            <?= I18N::translate('Family trees') ?>
+            <span class="badge bg-secondary">
+                    <?= I18N::number($all_trees->count()) ?>
+                </span>
+        </h2>
+    </div>
+
+    <div class="card-body">
+        <?php if ($all_trees->isEmpty()) : ?>
+            <p class="alert alert-info">
+                <?= I18N::translate('You need to create a family tree.') ?>
+            </p>
+        <?php endif ?>
+
+        <ul class="fa-ul mx-0">
+            <li>
+                <span class="fa-li"><?= view('icons/add') ?></span>
+                <a href="<?= e(route(CreateTreePage::class)) ?>">
+                    <?= I18N::translate('Create a family tree') ?>
+                </a>
+            </li>
+            <li>
+                <span class="fa-li"><?= view('icons/block') ?></span>
+                <a href="<?= e(route(TreePageDefaultEdit::class)) ?>">
+                    <?= I18N::translate('Set the default blocks for new family trees') ?>
+                </a>
+            </li>
+            <?php if (count($all_trees) > 1) : ?>
+                <li>
+                    <span class="fa-li"><?= view('icons/merge') ?></span>
+                    <a href="<?= e(route(MergeTreesPage::class)) ?>">
+                        <?= I18N::translate('Merge family trees') ?>
+                    </a>
+                </li>
+            <?php endif ?>
+        </ul>
+
+        <table class="table table-sm">
+            <caption class="visually-hidden">
+                <?= I18N::translate('Family trees') ?>
+            </caption>
+
+            <thead>
+                <tr>
+                    <th><?= I18N::translate('Family tree') ?></th>
+                    <th class="align-digits"><?= I18N::translate('Pending changes') ?></th>
+                    <th class="d-none d-sm-table-cell align-digits"><?= I18N::translate('Individuals') ?></th>
+                    <th class="d-none d-lg-table-cell align-digits"><?= I18N::translate('Families') ?></th>
+                    <th class="d-none d-sm-table-cell align-digits"><?= I18N::translate('Sources') ?></th>
+                    <th class="d-none d-lg-table-cell align-digits"><?= I18N::translate('Repositories') ?></th>
+                    <th class="d-none d-sm-table-cell align-digits"><?= I18N::translate('Media') ?></th>
+                    <th class="d-none d-lg-table-cell align-digits"><?= I18N::translate('Notes') ?></th>
+                    <th class="d-none d-lg-table-cell align-digits"><?= I18N::translate('Submitters') ?></th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <?php foreach ($all_trees as $tree) : ?>
+                    <tr class="<?= $changes[$tree->id()] ? 'danger' : '' ?>">
+                        <th scope="row">
+                            <?= view('icons/preferences') ?>
+                            <a href="<?= e(route(ManageTrees::class, ['tree' => $tree->name()])) ?>">
+                                <?= e($tree->name()) ?>
+                                -
+                                <?= e($tree->title()) ?>
+                            </a>
+                        </th>
+                        <td style="text-align: right;">
+                            <?php if ($changes[$tree->id()]) : ?>
+                                <a href="<?= e(route(PendingChanges::class, ['tree' => $tree->name(), 'url' => route(ControlPanel::class)])) ?>">
+                                    <?= I18N::number($changes[$tree->id()]) ?>
+                                    <span class="visually-hidden"><?= I18N::translate('Pending changes') ?> <?= e($tree->title()) ?></span>
+                                </a>
+                            <?php else : ?>
+                                -
+                            <?php endif ?>
+                        </td>
+                        <td class="d-none d-sm-table-cell align-digits">
+                            <?php if ($individuals[$tree->id()] > 0) : ?>
+                                <?php if ($individual_list_module instanceof IndividualListModule) : ?>
+                                    <a href="<?= e($individual_list_module->listUrl($tree)) ?>"><?= I18N::number($individuals[$tree->id()]) ?></a>
+                                <?php else : ?>
+                                    <?= I18N::number($individuals[$tree->id()]) ?>
+                                <?php endif ?>
+                            <?php else : ?>
+                                -
+                            <?php endif ?>
+                        </td>
+                        <td class="d-none d-lg-table-cell align-digits">
+                            <?php if ($families[$tree->id()] > 0) : ?>
+                                <?php if ($family_list_module instanceof FamilyListModule) : ?>
+                                    <a href="<?= e($family_list_module->listUrl($tree)) ?>"><?= I18N::number($families[$tree->id()]) ?></a>
+                                <?php else : ?>
+                                    <?= I18N::number($families[$tree->id()]) ?>
+                                <?php endif ?>
+                            <?php else : ?>
+                                -
+                            <?php endif ?>
+                        </td>
+                        <td class="d-none d-sm-table-cell align-digits">
+                            <?php if ($sources[$tree->id()] > 0) : ?>
+                                <?php if ($source_list_module instanceof SourceListModule) : ?>
+                                    <a href="<?= e($source_list_module->listUrl($tree)) ?>"><?= I18N::number($sources[$tree->id()]) ?></a>
+                                <?php else : ?>
+                                    <?= I18N::number($sources[$tree->id()]) ?>
+                                <?php endif ?>
+                            <?php else : ?>
+                                -
+                            <?php endif ?>
+                        </td>
+                        <td class="d-none d-lg-table-cell align-digits">
+                            <?php if ($repositories[$tree->id()] > 0) : ?>
+                                <?php if ($repository_list_module instanceof RepositoryListModule) : ?>
+                                    <a href="<?= e($repository_list_module->listUrl($tree)) ?>"><?= I18N::number($repositories[$tree->id()]) ?></a>
+                                <?php else : ?>
+                                    <?= I18N::number($repositories[$tree->id()]) ?>
+                                <?php endif ?>
+                            <?php else : ?>
+                                -
+                            <?php endif ?>
+                        </td>
+                        <td class="d-none d-sm-table-cell align-digits">
+                            <?php if ($media[$tree->id()] > 0) : ?>
+                                <?php if ($media_list_module instanceof MediaListModule) : ?>
+                                    <a href="<?= e($media_list_module->listUrl($tree)) ?>"><?= I18N::number($media[$tree->id()]) ?></a>
+                                <?php else : ?>
+                                    <?= I18N::number($media[$tree->id()]) ?>
+                                <?php endif ?>
+                            <?php else : ?>
+                                -
+                            <?php endif ?>
+                        </td>
+                        <td class="d-none d-lg-table-cell align-digits">
+                            <?php if ($notes[$tree->id()] > 0) : ?>
+                                <?php if ($note_list_module instanceof NoteListModule) : ?>
+                                    <a href="<?= e($note_list_module->listUrl($tree)) ?>"><?= I18N::number($notes[$tree->id()]) ?></a>
+                                <?php else : ?>
+                                    <?= I18N::number($notes[$tree->id()]) ?>
+                                <?php endif ?>
+                            <?php else : ?>
+                                -
+                            <?php endif ?>
+                        </td>
+                         <td class="d-none d-lg-table-cell align-digits">
+                            <?php if ($submitters[$tree->id()] > 0) : ?>
+                                <?php if ($submitter_list_module instanceof SubmitterListModule) : ?>
+                                    <a href="<?= e($submitter_list_module->listUrl($tree)) ?>"><?= I18N::number($submitters[$tree->id()]) ?></a>
+                                <?php else : ?>
+                                    <?= I18N::number($submitters[$tree->id()]) ?>
+                                <?php endif ?>
+                            <?php else : ?>
+                                -
+                            <?php endif ?>
+                        </td>
+                    </tr>
+                <?php endforeach ?>
+            </tbody>
+
+            <tfoot>
+                <tr>
+                    <th scope="row">
+                        <?= I18N::translate('Total') ?>
+                    </th>
+                    <td class="align-digits">
+                        <?= I18N::number(array_sum($changes)) ?>
+                    </td>
+                    <td class="d-none d-sm-table-cell align-digits">
+                        <?= I18N::number($individuals->sum()) ?>
+                    </td>
+                    <td class="d-none d-lg-table-cell align-digits">
+                        <?= I18N::number($families->sum()) ?>
+                    </td>
+                    <td class="d-none d-sm-table-cell align-digits">
+                        <?= I18N::number($sources->sum()) ?>
+                    </td>
+                    <td class="d-none d-lg-table-cell align-digits">
+                        <?= I18N::number($repositories->sum()) ?>
+                    </td>
+                    <td class="d-none d-sm-table-cell align-digits">
+                        <?= I18N::number($media->sum()) ?>
+                    </td>
+                    <td class="d-none d-lg-table-cell align-digits">
+                        <?= I18N::number($notes->sum()) ?>
+                    </td>
+                    <td class="d-none d-lg-table-cell align-digits">
+                        <?= I18N::number($submitters->sum()) ?>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<?php if ($show_synchronize) : ?>
+    <?= view('admin/synchronize-trees') ?>
+<?php endif ?>
+
+<!-- USERS -->
+<div class="card mb-4 <?= $unapproved->isNotEmpty() || $unverified->isNotEmpty() ? 'card-outline-danger' : '' ?>">
+    <div class="card-header">
+        <h2 class="mb-0">
+            <?= I18N::translate('Users') ?>
+            <span class="badge bg-secondary">
+                    <?= I18N::number(count($all_users)) ?>
+                </span>
+        </h2>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <?php foreach ([I18N::translate('Administrators') => $administrators, I18N::translate('Managers') => $managers, I18N::translate('Moderators') => $moderators, I18N::translate('Not verified by the user') => $unverified, I18N::translate('Not approved by an administrator') => $unapproved] as $label => $list) : ?>
+                <dt class="col-sm-6">
+                    <?= $label ?>
+                </dt>
+                <dd class="col-sm-6">
+                    <?php foreach ($list as $n => $user) : ?>
+                        <?= $n ? I18N::$list_separator : '' ?>
+                        <a href="<?= e(route(UserEditPage::class, ['user_id' => $user->id()])) ?>" dir="auto">
+                            <?= e($user->realName()) ?>
+                        </a>
+                    <?php endforeach ?>
+                    <?php if ($list->isEmpty()) : ?>
+                        —
+                    <?php endif ?>
+                </dd>
+            <?php endforeach ?>
+        </dl>
+
+        <div class="row">
+            <div class="col-sm-6">
+                <ul class="fa-ul mx-0">
+                    <li>
+                        <span class="fa-li"><?= view('icons/preferences') ?></span>
+                        <a href="<?= e(route(UserListPage::class)) ?>">
+                            <?= I18N::translate('User administration') ?>
+                        </a>
+                    </li>
+                    <li>
+                        <span class="fa-li"><?= view('icons/add') ?></span>
+                        <a href="<?= e(route(UserAddPage::class)) ?>">
+                            <?= I18N::translate('Add a user') ?>
+                        </a>
+                    </li>
+                    <li>
+                        <span class="fa-li"><?= view('icons/delete') ?></span>
+                        <a href="<?= e(route(UsersCleanupPage::class)) ?>">
+                            <?= I18N::translate('Delete inactive users') ?>
+                        </a>
+                    </li>
+                    <li>
+                        <span class="fa-li"><?= view('icons/block') ?></span>
+                        <a href="<?= e(route(UserPageDefaultEdit::class)) ?>">
+                            <?= I18N::translate('Set the default blocks for new users') ?>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-sm-6">
+                <ul class="fa-ul mx-0">
+                    <?php foreach ($recipients as $to => $recipient) : ?>
+                    <li>
+                        <span class="fa-li"><?= view('icons/email') ?></span>
+                        <a href="<?= e(route(BroadcastPage::class, ['to' => $to])) ?>">
+                            <?= $recipient ?>
+                        </a>
+                    </li>
+                    <?php endforeach ?>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODULES -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h2 class="mb-0">
+            <?= I18N::translate('Modules') ?>
+            <?= view('components/badge', ['count' => $all_modules_enabled->count(), 'total' => $all_modules_disabled->count(), 'context' => 'secondary']) ?>
+        </h2>
+    </div>
+
+    <div class="card-body">
+        <ul class="fa-ul mx-0">
+            <li>
+                <span class="fa-li"><?= view('icons/module') ?></span>
+                <a href="<?= e(route(ModulesAllPage::class)) ?>">
+                    <?= I18N::translate('All modules') ?>
+                </a>
+                <?= view('components/badge', ['count' => $all_modules_enabled->count(), 'total' => $all_modules_disabled->count(), 'context' => 'primary']) ?>
+            </li>
+        </ul>
+
+        <div class="row">
+            <div class="col-sm-4">
+                <h3>
+                    <?= I18N::translate('Website') ?>
+                </h3>
+
+                <ul class="fa-ul mx-0">
+                    <li>
+                        <span class="fa-li"><?= view('icons/footer') ?></span>
+                        <a href="<?= e(route(ModulesFootersPage::class)) ?>">
+                            <?= I18N::translate('Footers') ?>
+                        </a>
+                        <?= view('components/badge', ['count' => $footer_modules_enabled->count(), 'total' => $footer_modules_disabled->count(), 'context' => 'primary']) ?>
+                    </li>
+                    <li>
+                        <span class="fa-li"><?= view('icons/analytics') ?></span>
+                        <a href="<?= e(route(ModulesAnalyticsPage::class)) ?>">
+                            <?= I18N::translate('Tracking and analytics') ?>
+                        </a>
+                        <?= view('components/badge', ['count' => $analytics_modules_enabled->count(), 'total' => $analytics_modules_disabled->count(), 'context' => 'primary']) ?>
+                    </li>
+                    <li>
+                        <span class="fa-li"><?= view('icons/theme') ?></span>
+                        <a href="<?= e(route(ModulesThemesPage::class)) ?>">
+                            <?= I18N::translate('Themes') ?>
+                        </a>
+                        <?= view('components/badge', ['count' => $theme_modules_enabled->count(), 'total' => $theme_modules_disabled->count(), 'context' => 'primary']) ?>
+                    </li>
+                    <li>
+                        <span class="fa-li"><?= view('icons/language') ?></span>
+                        <a href="<?= e(route(ModulesLanguagesPage::class)) ?>">
+                            <?= I18N::translate('Languages') ?>
+                        </a>
+                        <?= view('components/badge', ['count' => $language_modules_enabled->count(), 'total' => $language_modules_disabled->count(), 'context' => 'primary']) ?>
+                    </li>
+                </ul>
+
+                <h3>
+                    <?= I18N::translate('Home page') ?>
+                </h3>
+
+                <ul class="fa-ul mx-0">
+                    <li>
+                        <span class="fa-li"><?= view('icons/block') ?></span>
+                        <a href="<?= e(route(ModulesBlocksPage::class)) ?>">
+                            <?= I18N::translate('Blocks') ?>
+                        </a>
+                        <?= view('components/badge', ['count' => $block_modules_enabled->count(), 'total' => $block_modules_disabled->count(), 'context' => 'primary']) ?>
+                    </li>
+                </ul>
+
+                <h3>
+                    <?= I18N::translate('Geographic data') ?>
+                </h3>
+
+                <ul class="fa-ul mx-0">
+                    <li>
+                        <span class="fa-li"><?= view('icons/search') ?></span>
+                        <a href="<?= e(route(ModulesMapAutocompletePage::class)) ?>">
+                            <?= /* I18N: Automatic suggestions when you type */ I18N::translate('Autocomplete') ?>
+                        </a>
+                        <?= view('components/badge', ['count' => $map_autocomplete_modules_enabled->count(), 'total' => $map_autocomplete_modules_disabled->count(), 'context' => 'primary']) ?>
+                    </li>
+                    <li>
+                        <span class="fa-li"><?= view('icons/search-location') ?></span>
+                        <a href="<?= e(route(ModulesMapGeoLocationsPage::class)) ?>">
+                            <?= /* I18N: find latitude/longitude for a place */ I18N::translate('Geolocation') ?>
+                        </a>
+                        <?= view('components/badge', ['count' => $map_search_modules_enabled->count(), 'total' => $map_search_modules_disabled->count(), 'context' => 'primary']) ?>
+                    </li>
+                    <li>
+                        <span class="fa-li"><?= view('icons/location') ?></span>
+                        <a href="<?= e(route(ModulesMapLinksPage::class)) ?>">
+                            <?= /* I18N: Links to maps */ I18N::translate('Map links') ?>
+                        </a>
+                        <?= view('components/badge', ['count' => $map_link_modules_enabled->count(), 'total' => $map_link_modules_disabled->count(), 'context' => 'primary']) ?>
+                    </li>
+                    <li>
+                        <span class="fa-li"><?= view('icons/map') ?></span>
+                        <a href="<?= e(route(ModulesMapProvidersPage::class)) ?>">
+                            <?= I18N::translate('Map providers') ?>
+                        </a>
+                        <?= view('components/badge', ['count' => $map_provider_modules_enabled->count(), 'total' => $map_provider_modules_disabled->count(), 'context' => 'primary']) ?>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="col-sm-4">
+                <h3>
+                    <?= I18N::translate('Genealogy') ?>
+                </h3>
+
+                <ul class="fa-ul mx-0">
+                    <li>
+                        <span class="fa-li"><?= view('icons/menu') ?></span>
+                        <a href="<?= e(route(ModulesMenusPage::class)) ?>">
+                            <?= I18N::translate('Menus') ?>
+                        </a>
+                        <?= view('components/badge', ['count' => $menu_modules_enabled->count(), 'total' => $menu_modules_disabled->count(), 'context' => 'primary']) ?>
+                    </li>
+                    <li>
+                        <span class="fa-li"><?= view('icons/chart') ?></span>
+                        <a href="<?= e(route(ModulesChartsPage::class)) ?>">
+                            <?= I18N::translate('Charts') ?>
+                        </a>
+                        <?= view('components/badge', ['count' => $chart_modules_enabled->count(), 'total' => $chart_modules_disabled->count(), 'context' => 'primary']) ?>
+                    </li>
+                    <li>
+                        <span class="fa-li"><?= view('icons/list') ?></span>
+                        <a href="<?= e(route(ModulesListsPage::class)) ?>">
+                            <?= I18N::translate('Lists') ?>
+                        </a>
+                        <?= view('components/badge', ['count' => $list_modules_enabled->count(), 'total' => $list_modules_disabled->count(), 'context' => 'primary']) ?>
+                    </li>
+                    <li>
+                        <span class="fa-li"><?= view('icons/report') ?></span>
+                        <a href="<?= e(route(ModulesReportsPage::class)) ?>">
+                            <?= I18N::translate('Reports') ?>
+                        </a>
+                        <?= view('components/badge', ['count' => $report_modules_enabled->count(), 'total' => $report_modules_disabled->count(), 'context' => 'primary']) ?>
+                    </li>
+                    <li>
+                        <span class="fa-li"><?= view('icons/data-fix') ?></span>
+                        <a href="<?= e(route(ModulesDataFixesPage::class)) ?>">
+                            <?= I18N::translate('Data fixes') ?>
+                        </a>
+                        <?= view('components/badge', ['count' => $data_fix_modules_enabled->count(), 'total' => $data_fix_modules_disabled->count(), 'context' => 'primary']) ?>
+                    </li>
+                </ul>
+
+                <h3>
+                    <?= I18N::translate('Individual page') ?>
+                </h3>
+
+                <ul class="fa-ul mx-0">
+                    <li>
+                        <span class="fa-li"><?= view('icons/tab') ?></span>
+                        <a href="<?= e(route(ModulesTabsPage::class)) ?>">
+                            <?= I18N::translate('Tabs') ?>
+                            <?= view('components/badge', ['count' => $tab_modules_enabled->count(), 'total' => $tab_modules_disabled->count(), 'context' => 'primary']) ?>
+                        </a>
+                    </li>
+                    <li>
+                        <span class="fa-li"><?= view('icons/sidebar') ?></span>
+                        <a href="<?= e(route(ModulesSidebarsPage::class)) ?>">
+                            <?= I18N::translate('Sidebars') ?>
+                        </a>
+                        <?= view('components/badge', ['count' => $sidebar_modules_enabled->count(), 'total' => $sidebar_modules_disabled->count(), 'context' => 'primary']) ?>
+                    </li>
+                    <li>
+                        <span class="fa-li"><?= view('icons/history') ?></span>
+                        <a href="<?= e(route(ModulesHistoricEventsPage::class)) ?>">
+                            <?= I18N::translate('Historic events') ?>
+                        </a>
+                        <?= view('components/badge', ['count' => $history_modules_enabled->count(), 'total' => $history_modules_disabled->count(), 'context' => 'primary']) ?>
+                    </li>
+                    <li>
+                        <span class="fa-li"><?= view('icons/share') ?></span>
+                        <a href="<?= e(route(ModulesSharesPage::class)) ?>">
+                            <?= /* I18N: plural noun - things that can be shared */  I18N::translate('Shares') ?>
+                        </a>
+                        <?= view('components/badge', ['count' => $share_modules_enabled->count(), 'total' => $share_modules_disabled->count(), 'context' => 'primary']) ?>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="col-sm-4">
+
+                <h3>
+                    <?= I18N::translate('Other') ?>
+                </h3>
+
+                <ul class="fa-ul mx-0">
+                    <?php foreach ($other_modules as $module) : ?>
+                        <li>
+                            <?php if ($module->isEnabled()) : ?>
+                                <span class="fa-li"><?= view('icons/module') ?></span>
+                                <?php if ($module instanceof ModuleConfigInterface) : ?>
+                                    <a href="<?= e($module->getConfigLink()) ?>">
+                                    <?= $module->title() ?>
+                                    <?= view('icons/preferences') ?>
+                                    </a>
+                                <?php else : ?>
+                                    <?= $module->title() ?>
+                                <?php endif ?>
+                            <?php else : ?>
+                                <span class="text-muted">
+                                    <span class="fa-li"><?= view('icons/module') ?></span>
+                                    <?= $module->title() ?>
+                                    <?php if ($module instanceof ModuleConfigInterface) : ?>
+                                        <?= view('icons/preferences') ?>
+                                    <?php endif ?>
+                                </span>
+                            <?php endif ?>
+
+                            <?php if ($module instanceof ModuleCustomInterface) : ?>
+                                <?= view('admin/custom-module-info', ['module' => $module]) ?>
+                            <?php endif ?>
+                        </li>
+                    <?php endforeach ?>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MEDIA -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h2 class="mb-0">
+            <?= I18N::translate('Media') ?>
+        </h2>
+    </div>
+    <div class="card-body">
+        <ul class="fa-ul mx-0">
+            <li>
+                <span class="fa-li"><?= view('icons/preferences') ?></span>
+                <a href="<?= e(route(ManageMediaPage::class)) ?>">
+                    <?= I18N::translate('Manage media') ?>
+                </a>
+            </li>
+            <li>
+                <span class="fa-li"><?= view('icons/upload') ?></span>
+                <a href="<?= e(route(UploadMediaPage::class)) ?>">
+                    <?= I18N::translate('Upload media files') ?>
+                </a>
+            </li>
+            <li>
+                <span class="fa-li"><?= view('icons/link') ?></span>
+                <a href="<?= e(route(FixLevel0MediaPage::class)) ?>">
+                    <?= I18N::translate('Link media objects to facts and events') ?>
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!-- MAPS -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h2 class="mb-0">
+            <?= I18N::translate('Map') ?>
+        </h2>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-sm-12">
+                <ul class="fa-ul mx-0">
+                    <li>
+                        <span class="fa-li"><?= view('icons/location') ?></span>
+                        <a href="<?= e(route(MapDataList::class)) ?>">
+                            <?= I18N::translate('Geographic data') ?>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- OLD FILES -->
+<?php if ($files_to_delete !== []) : ?>
+    <div class="card mb-4 card-outline-danger">
+        <div class="card-header">
+            <h2 class="mb-0">
+                <?= I18N::translate('Old files found') ?>
+            </h2>
+        </div>
+        <div class="card-body">
+            <p>
+                <?= I18N::translate('Files have been found from a previous version of webtrees. Old files can sometimes be a security risk. You should delete them.') ?>
+            </p>
+            <ul class="list-unstyled">
+                <?php foreach ($files_to_delete as $file_to_delete) : ?>
+                    <li dir="ltr">
+                        <code><?= e($file_to_delete) ?></code>
+                    </li>
+                <?php endforeach ?>
+            </ul>
+        </div>
+    </div>
+<?php endif ?>

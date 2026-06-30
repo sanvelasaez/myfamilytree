@@ -1,0 +1,48 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Individual;
+use Fisharebest\Webtrees\Module\IndividualListModule;
+use Fisharebest\Webtrees\Module\ModuleListInterface;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var IndividualListModule|null $module
+ * @var array<array<int>>         $surnames
+ * @var bool                      $totals
+ * @var Tree                      $tree
+ */
+
+$items = [];
+
+foreach ($surnames as $surn => $surns) {
+    foreach ($surns as $surname => $count) {
+        if ($surname === Individual::NOMEN_NESCIO) {
+            $label = I18N::translateContext('Unknown surname', '…');
+            $url   = $module instanceof ModuleListInterface ? $module->listUrl($tree, ['alpha' => '@']) : '';
+        } elseif ($surname === '') {
+            $label = e($surn);
+            $url   = $module instanceof ModuleListInterface ? $module->listUrl($tree, ['surname' => $surn]) : '';
+        } else {
+            $label = e($surname);
+            $url   = $module instanceof ModuleListInterface ? $module->listUrl($tree, ['surname' => $surn]) : '';
+        }
+
+        if ($totals) {
+            $item = I18N::translate('%1$s (%2$s)', '<span class="ut">' . $label . '</span>', I18N::number($count));
+        } else {
+            $item = $label;
+        }
+
+        if ($url !== '') {
+            $items[] = '<li class="wt-surnames-bullet-list-item"><a href="' . e($url) . '">' . $item . '</a></li>';
+        } else {
+            $items[] = '<li class="wt-surnames-bullet-list-item">' . $item . '</li>';
+        }
+    }
+}
+?>
+<ul class="wt-surnames-bullet-list"><?= implode('', $items) ?></ul>
+

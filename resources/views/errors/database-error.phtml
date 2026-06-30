@@ -1,0 +1,23 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+
+/**
+ * @var string $error
+ */
+
+?>
+
+<p>
+    <?= I18N::translate('An unexpected database error occurred.') ?>
+</p>
+
+<pre>
+    <?= e($error) ?>
+</pre>
+
+<p>
+    <?= I18N::translate('The webtrees developers would be very interested to learn about this error. If you contact them, they will help you resolve the problem.') ?>
+</p>

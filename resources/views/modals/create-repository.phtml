@@ -1,0 +1,31 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Contracts\ElementInterface;
+use Fisharebest\Webtrees\Http\RequestHandlers\CreateRepositoryAction;
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var array<string,ElementInterface> $elements
+ * @var Tree                           $tree
+ */
+
+?>
+
+<form method="post" action="<?= e(route(CreateRepositoryAction::class, ['tree' => $tree->name()])) ?>" id="wt-modal-form">
+    <?= view('modals/header', ['title' => I18N::translate('Create a repository')]) ?>
+
+    <div class="modal-body">
+        <?= view('modals/repository-fields', ['elements' => $elements, 'tree' => $tree]) ?>
+    </div>
+
+    <?= view('modals/footer-save-cancel') ?>
+
+    <?= csrf_field() ?>
+</form>
+
+<script>
+  document.getElementById('wt-modal-form').addEventListener('submit', webtrees.createRecordModalSubmit);
+</script>

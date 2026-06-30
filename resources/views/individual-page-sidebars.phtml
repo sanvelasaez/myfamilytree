@@ -1,0 +1,32 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Individual;
+use Fisharebest\Webtrees\Module\ModuleSidebarInterface;
+use Illuminate\Support\Collection;
+
+/**
+ * @var Individual                             $record
+ * @var Collection<int,ModuleSidebarInterface> $sidebars
+ */
+?>
+
+<div class="accordion wt-sidebar" id="sidebar">
+    <?php foreach ($sidebars as $sidebar) : ?>
+        <div class="accordion-item">
+            <div class="accordion-header" id="sidebar-header-<?= $sidebar->name() ?>">
+                <button class="accordion-button gap-1<?= $sidebar->name() === 'family_nav' ? '' : ' collapsed' ?>" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-content-<?= $sidebar->name() ?>" aria-expanded="<?= $sidebar->name() === 'family_nav' ? 'true' : 'false' ?>" aria-controls="sidebar-content-<?= $sidebar->name() ?>">
+                    <?= view('icons/expand') ?>
+                    <?= view('icons/collapse') ?>
+                    <?= $sidebar->sidebarTitle($record) ?>
+                </button>
+            </div>
+            <div id="sidebar-content-<?= $sidebar->name() ?>" class="accordion-collapse collapse<?= $sidebar->name() === 'family_nav' ? ' show' : '' ?>" data-bs-parent="#sidebar" aria-labelledby="sidebar-header-<?= $sidebar->name() ?>">
+                <div class="accordion-body">
+                    <?= $sidebar->getSidebarContent($record) ?>
+                </div>
+            </div>
+        </div>
+    <?php endforeach ?>
+</div>

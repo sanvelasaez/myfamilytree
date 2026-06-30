@@ -1,0 +1,17 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @var string $x
+ * @var string $y
+ * @var string $z
+ */
+
+?>
+<input type="text" name="<?= e($x) ?>" class="d-none" aria-label="field1" value="ok">
+<input type="text" name="<?= e($y) ?>" class="d-none" aria-label="field2" value="<?= e($z) ?>">
+
+<script>
+    document.getElementsByName(<?= json_encode($x, JSON_THROW_ON_ERROR) ?>)[0].value = document.getElementsByName(<?= json_encode($y, JSON_THROW_ON_ERROR) ?>)[0].value;
+</script>

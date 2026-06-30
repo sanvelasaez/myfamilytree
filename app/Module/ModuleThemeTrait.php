@@ -1,0 +1,520 @@
+<?php
+
+/**
+ * webtrees: online genealogy
+ * Copyright (C) 2026 webtrees development team
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+declare(strict_types=1);
+
+namespace Fisharebest\Webtrees\Module;
+
+use Fisharebest\Webtrees\Auth;
+use Fisharebest\Webtrees\Contracts\UserInterface;
+use Fisharebest\Webtrees\Fact;
+use Fisharebest\Webtrees\Gedcom;
+use Fisharebest\Webtrees\Http\RequestHandlers\AccountEdit;
+use Fisharebest\Webtrees\Http\RequestHandlers\ControlPanel;
+use Fisharebest\Webtrees\Http\RequestHandlers\HomePage;
+use Fisharebest\Webtrees\Http\RequestHandlers\LoginPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\Logout;
+use Fisharebest\Webtrees\Http\RequestHandlers\ManageTrees;
+use Fisharebest\Webtrees\Http\RequestHandlers\PendingChanges;
+use Fisharebest\Webtrees\Http\RequestHandlers\SelectLanguage;
+use Fisharebest\Webtrees\Http\RequestHandlers\SelectTheme;
+use Fisharebest\Webtrees\Http\RequestHandlers\TreePage;
+use Fisharebest\Webtrees\Http\RequestHandlers\TreePageEdit;
+use Fisharebest\Webtrees\Http\RequestHandlers\UserPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\UserPageEdit;
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Individual;
+use Fisharebest\Webtrees\Menu;
+use Fisharebest\Webtrees\Registry;
+use Fisharebest\Webtrees\Services\ModuleService;
+use Fisharebest\Webtrees\Tree;
+use Fisharebest\Webtrees\Validator;
+use Psr\Http\Message\ServerRequestInterface;
+
+use function count;
+use function in_array;
+use function route;
+use function view;
+
+/**
+ * Trait ModuleThemeTrait - default implementation of ModuleThemeInterface
+ */
+trait ModuleThemeTrait
+{
+    abstract public function title(): string;
+
+    public function description(): string
+    {
+        return I18N::translate('Theme') . ' — ' . $this->title();
+    }
+
+    /**
+     * Generate the facts, for display in charts.
+     *
+     * @param Individual $individual
+     *
+     * @return string
+     */
+    public function individualBoxFacts(Individual $individual): string
+    {
+        $html = '';
+
+        $opt_tags = preg_split('/\W/', $individual->tree()->getPreference('CHART_BOX_TAGS'), 0, PREG_SPLIT_NO_EMPTY);
+        // Show BIRT or equivalent event
+        foreach (Gedcom::BIRTH_EVENTS as $birttag) {
+            if (!in_array($birttag, $opt_tags, true)) {
+                $event = $individual->facts([$birttag])->first();
+                if ($event instanceof Fact) {
+                    $html .= $event->summary();
+                    break;
+                }
+            }
+        }
+        // Show optional events (before death)
+        foreach ($opt_tags as $key => $tag) {
+            if (!in_array($tag, Gedcom::DEATH_EVENTS, true)) {
+                $event = $individual->facts([$tag])->first();
+                if ($event instanceof Fact) {
+                    $html .= $event->summary();
+                    unset($opt_tags[$key]);
+                }
+            }
+        }
+        // Show DEAT or equivalent event
+        foreach (Gedcom::DEATH_EVENTS as $deattag) {
+            $event = $individual->facts([$deattag])->first();
+            if ($event instanceof Fact) {
+                $html .= $event->summary();
+                if (in_array($deattag, $opt_tags, true)) {
+                    unset($opt_tags[array_search($deattag, $opt_tags, true)]);
+                }
+                break;
+            }
+        }
+        // Show remaining optional events (after death)
+        foreach ($opt_tags as $tag) {
+            $event = $individual->facts([$tag])->first();
+            if ($event instanceof Fact) {
+                $html .= $event->summary();
+            }
+        }
+
+        return $html;
+    }
+
+    /**
+     * Links, to show in chart boxes;
+     *
+     * @param Individual $individual
+     *
+     * @return array<Menu>
+     */
+    public function individualBoxMenu(Individual $individual): array
+    {
+        return array_merge(
+            $this->individualBoxMenuCharts($individual),
+            $this->individualBoxMenuFamilyLinks($individual)
+        );
+    }
+
+    /**
+     * Chart links, to show in chart boxes;
+     *
+     * @param Individual $individual
+     *
+     * @return array<Menu>
+     */
+    public function individualBoxMenuCharts(Individual $individual): array
+    {
+        $menus = [];
+
+        $module_service = Registry::container()->get(ModuleService::class);
+
+        foreach ($module_service->findByComponent(ModuleChartInterface::class, $individual->tree(), Auth::user()) as $chart) {
+            $menu = $chart->chartBoxMenu($individual);
+            if ($menu) {
+                $menus[] = $menu;
+            }
+        }
+
+        usort($menus, static fn (Menu $x, Menu $y): int => I18N::comparator()($x->getLabel(), $y->getLabel()));
+
+        return $menus;
+    }
+
+    /**
+     * Family links, to show in chart boxes.
+     *
+     * @param Individual $individual
+     *
+     * @return array<Menu>
+     */
+    public function individualBoxMenuFamilyLinks(Individual $individual): array
+    {
+        $menus = [];
+
+        foreach ($individual->spouseFamilies() as $family) {
+            $menus[] = new Menu('<strong>' . I18N::translate('Family with spouse') . '</strong>', $family->url());
+            $spouse  = $family->spouse($individual);
+            if ($spouse && $spouse->canShowName()) {
+                $menus[] = new Menu($spouse->fullName(), $spouse->url());
+            }
+            foreach ($family->children() as $child) {
+                if ($child->canShowName()) {
+                    $menus[] = new Menu($child->fullName(), $child->url());
+                }
+            }
+        }
+
+        return $menus;
+    }
+
+    /**
+     * Generate a menu item to change the blocks on the current tree/user page.
+     *
+     * @param Tree $tree
+     *
+     * @return Menu|null
+     */
+    public function menuChangeBlocks(Tree $tree): Menu|null
+    {
+        $request = Registry::container()->get(ServerRequestInterface::class);
+        $route   = Validator::attributes($request)->route();
+
+        if (Auth::check() && $route->name === UserPage::class) {
+            return new Menu(I18N::translate('Customize this page'), route(UserPageEdit::class, ['tree' => $tree->name()]), 'menu-change-blocks');
+        }
+
+        if (Auth::isManager($tree) && $route->name === TreePage::class) {
+            return new Menu(I18N::translate('Customize this page'), route(TreePageEdit::class, ['tree' => $tree->name()]), 'menu-change-blocks');
+        }
+
+        return null;
+    }
+
+    /**
+     * Generate a menu item for the control panel.
+     *
+     * @param Tree $tree
+     *
+     * @return Menu|null
+     */
+    public function menuControlPanel(Tree $tree): Menu|null
+    {
+        if (Auth::isAdmin()) {
+            return new Menu(I18N::translate('Control panel'), route(ControlPanel::class), 'menu-admin');
+        }
+
+        if (Auth::isManager($tree)) {
+            return new Menu(I18N::translate('Control panel'), route(ManageTrees::class, ['tree' => $tree->name()]), 'menu-admin');
+        }
+
+        return null;
+    }
+
+    /**
+     * A menu to show a list of available languages.
+     *
+     * @return Menu|null
+     */
+    public function menuLanguages(): Menu|null
+    {
+        $menu = new Menu(I18N::translate('Language'), '#', 'menu-language');
+
+        foreach (I18N::activeLocales() as $active_locale) {
+            $language_tag = $active_locale->languageTag();
+            $class        = 'menu-language-' . $language_tag . (I18N::languageTag() === $language_tag ? ' active' : '');
+            $menu->addSubmenu(new Menu($active_locale->endonym(), '#', $class, [
+                'data-wt-post-url' => route(SelectLanguage::class, ['language' => $language_tag]),
+            ]));
+        }
+
+        if (count($menu->getSubmenus()) > 1) {
+            return $menu;
+        }
+
+        return null;
+    }
+
+    /**
+     * A login menu option (or null if we are already logged in).
+     *
+     * @return Menu|null
+     */
+    public function menuLogin(): Menu|null
+    {
+        if (Auth::check()) {
+            return null;
+        }
+
+        $request = Registry::container()->get(ServerRequestInterface::class);
+
+        // Return to this page after login...
+        $redirect = Validator::queryParams($request)->string('url', (string) $request->getUri());
+        $tree     = Validator::attributes($request)->treeOptional();
+        $route    = Validator::attributes($request)->route();
+
+        // ...but switch from the tree-page to the user-page
+        if ($route->name === TreePage::class) {
+            $redirect = route(UserPage::class, ['tree' => $tree?->name()]);
+        }
+
+        // Stay on the same tree page
+        $url = route(LoginPage::class, ['tree' => $tree?->name(), 'url' => $redirect]);
+
+        return new Menu(I18N::translate('Sign in'), $url, 'menu-login', ['rel' => 'nofollow']);
+    }
+
+    /**
+     * A logout menu option (or null if we are already logged out).
+     *
+     * @return Menu|null
+     */
+    public function menuLogout(): Menu|null
+    {
+        if (Auth::check()) {
+            $parameters = [
+                'data-wt-post-url'   => route(Logout::class),
+                'data-wt-reload-url' => route(HomePage::class)
+            ];
+
+            return new Menu(I18N::translate('Sign out'), '#', 'menu-logout', $parameters);
+        }
+
+        return null;
+    }
+
+    /**
+     * A link to allow users to edit their account settings.
+     *
+     * @param Tree|null $tree
+     *
+     * @return Menu
+     */
+    public function menuMyAccount(Tree|null $tree): Menu
+    {
+        $url = route(AccountEdit::class, ['tree' => $tree?->name()]);
+
+        return new Menu(I18N::translate('My account'), $url, 'menu-myaccount');
+    }
+
+    /**
+     * A link to the user's individual record (individual.php).
+     *
+     * @param Tree $tree
+     *
+     * @return Menu|null
+     */
+    public function menuMyIndividualRecord(Tree $tree): Menu|null
+    {
+        $record = Registry::individualFactory()->make($tree->getUserPreference(Auth::user(), UserInterface::PREF_TREE_ACCOUNT_XREF), $tree);
+
+        if ($record instanceof Individual) {
+            return new Menu(I18N::translate('My individual record'), $record->url(), 'menu-myrecord');
+        }
+
+        return null;
+    }
+
+    /**
+     * A link to the user's personal home page.
+     *
+     * @param Tree $tree
+     *
+     * @return Menu
+     */
+    public function menuMyPage(Tree $tree): Menu
+    {
+        return new Menu(I18N::translate('My page'), route(UserPage::class, ['tree' => $tree->name()]), 'menu-mypage');
+    }
+
+    /**
+     * A menu for the user's personal pages.
+     *
+     * @param Tree|null $tree
+     *
+     * @return Menu|null
+     */
+    public function menuMyPages(Tree|null $tree): Menu|null
+    {
+        if (Auth::check()) {
+            if ($tree instanceof Tree) {
+                return new Menu(I18N::translate('My pages'), '#', 'menu-mymenu', [], array_filter([
+                    $this->menuMyPage($tree),
+                    $this->menuMyIndividualRecord($tree),
+                    $this->menuMyPedigree($tree),
+                    $this->menuMyAccount($tree),
+                    $this->menuControlPanel($tree),
+                    $this->menuChangeBlocks($tree),
+                ]));
+            }
+
+            return $this->menuMyAccount($tree);
+        }
+
+        return null;
+    }
+
+    /**
+     * A link to the user's individual record.
+     *
+     * @param Tree $tree
+     *
+     * @return Menu|null
+     */
+    public function menuMyPedigree(Tree $tree): Menu|null
+    {
+        $my_xref = $tree->getUserPreference(Auth::user(), UserInterface::PREF_TREE_ACCOUNT_XREF);
+
+        $module_service = Registry::container()->get(ModuleService::class);
+        $pedigree_chart = $module_service
+            ->findByComponent(ModuleChartInterface::class, $tree, Auth::user())
+            ->first(static fn (ModuleInterface $module): bool => $module instanceof PedigreeChartModule);
+
+        if ($my_xref !== '' && $pedigree_chart instanceof PedigreeChartModule) {
+            $individual = Registry::individualFactory()->make($my_xref, $tree);
+
+            if ($individual instanceof Individual) {
+                return new Menu(
+                    I18N::translate('My pedigree'),
+                    $pedigree_chart->chartUrl($individual),
+                    'menu-mypedigree'
+                );
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Create a pending changes menu.
+     *
+     * @param Tree|null $tree
+     *
+     * @return Menu|null
+     */
+    public function menuPendingChanges(Tree|null $tree): Menu|null
+    {
+        if ($tree instanceof Tree && $tree->hasPendingEdit() && Auth::isModerator($tree)) {
+            $request = Registry::container()->get(ServerRequestInterface::class);
+
+            $url = route(PendingChanges::class, [
+                'tree' => $tree->name(),
+                'url' => (string) $request->getUri(),
+            ]);
+
+            return new Menu(I18N::translate('Pending changes'), $url, 'menu-pending');
+        }
+
+        return null;
+    }
+
+    /**
+     * Themes menu.
+     *
+     * @return Menu|null
+     */
+    public function menuThemes(): Menu|null
+    {
+        $module_service = Registry::container()->get(ModuleService::class);
+        $themes         = $module_service->findByInterface(ModuleThemeInterface::class, false, true);
+        $current_theme  = Registry::container()->get(ModuleThemeInterface::class);
+
+        if ($themes->count() > 1) {
+            $submenus = $themes->map(static function (ModuleThemeInterface $theme) use ($current_theme): Menu {
+                $active     = $theme->name() === $current_theme->name();
+                $class      = 'menu-theme-' . $theme->name() . ($active ? ' active' : '');
+
+                return new Menu($theme->title(), '#', $class, [
+                    'data-wt-post-url' => route(SelectTheme::class, ['theme' => $theme->name()]),
+                ]);
+            });
+
+            return new Menu(I18N::translate('Theme'), '#', 'menu-theme', [], $submenus->all());
+        }
+
+        return null;
+    }
+
+    /**
+     * Generate a list of items for the main menu.
+     *
+     * @param Tree|null $tree
+     *
+     * @return array<Menu>
+     */
+    public function genealogyMenu(Tree|null $tree): array
+    {
+        if ($tree === null) {
+            return [];
+        }
+
+        $module_service = Registry::container()->get(ModuleService::class);
+
+        return $module_service
+            ->findByComponent(ModuleMenuInterface::class, $tree, Auth::user())
+            ->map(static fn (ModuleMenuInterface $menu): Menu|null => $menu->getMenu($tree))
+            ->filter()
+            ->all();
+    }
+
+    /**
+     * Create the genealogy menu.
+     *
+     * @param array<Menu> $menus
+     *
+     * @return string
+     */
+    public function genealogyMenuContent(array $menus): string
+    {
+        return implode('', array_map(static fn (Menu $menu): string => view('components/menu-item', ['menu' => $menu]), $menus));
+    }
+
+    /**
+     * Generate a list of items for the user menu.
+     *
+     * @param Tree|null $tree
+     *
+     * @return array<Menu>
+     */
+    public function userMenu(Tree|null $tree): array
+    {
+        return array_filter([
+            $this->menuPendingChanges($tree),
+            $this->menuMyPages($tree),
+            $this->menuThemes(),
+            $this->menuLanguages(),
+            $this->menuLogin(),
+            $this->menuLogout(),
+        ]);
+    }
+
+    /**
+     * A list of CSS files to include for this page.
+     *
+     * @return array<string>
+     */
+    public function stylesheets(): array
+    {
+        return [];
+    }
+
+    public function bootstrapColorScheme(): string
+    {
+        return 'light';
+    }
+}

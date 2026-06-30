@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Statistics;
+
+/**
+ * @var Statistics $statistics
+ */
+
+?>
+
+<div class="container pt-3">
+    <?= $statistics->embedTags(view('modules/statistics-chart/total-individuals')) ?>
+    <?= $statistics->embedTags(view('modules/statistics-chart/individual-events')) ?>
+    <?= $statistics->embedTags(view('modules/statistics-chart/lifespan')) ?>
+    <?= $statistics->embedTags(view('modules/statistics-chart/greatest-age')) ?>
+    <?= $statistics->embedTags(view('modules/statistics-chart/oldest-living')) ?>
+    <?= $statistics->embedTags(view('modules/statistics-chart/names')) ?>
+</div>

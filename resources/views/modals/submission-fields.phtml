@@ -1,0 +1,21 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var Tree $tree
+ */
+
+?>
+
+<div class="row mb-3">
+    <label class="col-form-label col-sm-2" for="submitter">
+        <?= I18N::translate('Submitter') ?>
+    </label>
+    <div class="col-sm-10">
+        <?= view('components/select-submitter', ['name' => 'submitter', 'tree' => $tree, 'required' => true]) ?>
+    </div>
+</div>

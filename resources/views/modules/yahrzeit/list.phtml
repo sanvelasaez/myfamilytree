@@ -1,0 +1,53 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Date;
+use Fisharebest\Webtrees\Fact;
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Individual;
+use Fisharebest\Webtrees\View;
+use Illuminate\Support\Collection;
+
+/**
+ * @var int                                                                                       $id
+ * @var int                                                                                       $limit_high
+ * @var int                                                                                       $limit_low
+ * @var Collection<int,object{individual:Individual,yahrzeit_date:Date,fact_date:Date,fact:Fact}> $yahrzeits
+ */
+
+?>
+
+<?php foreach ($yahrzeits as $n => $yahrzeit) : ?>
+    <?php if ($n === $limit_low && $yahrzeits->count() > $limit_high) : ?>
+        <div>
+            <button class="btn btn-sm btn-secondary" id="show-more-<?= e($id) ?>">
+                <?= view('icons/add') ?>
+                <?= /* I18N: button label */ I18N::translate('show more') ?>
+            </button>
+        </div>
+
+        <?php View::push('javascript') ?>
+        <script>
+            document.getElementById("show-more-<?= e($id) ?>").addEventListener("click", function (ev) {
+                document.querySelectorAll("#block-<?= e($id) ?> .d-none").forEach(function (el) {
+                    el.classList.remove("d-none");
+                });
+                ev.target.parentNode.removeChild(ev.target);
+            });
+        </script>
+        <?php View::endpush() ?>
+    <?php endif ?>
+
+    <div class="<?= $n >= $limit_low && $yahrzeits->count() > $limit_high ? 'd-none' : '' ?>">
+        <a href="<?= e($yahrzeit->individual->url()) ?>" class="list_item">
+            <?= $yahrzeit->individual->fullName() ?>
+        </a>
+        <small><?= view('icons/sex', ['sex' => $yahrzeit->individual->sex()]) ?></small>
+        <div class="indent">
+            <?= $yahrzeit->fact->date()->display($yahrzeit->individual->tree()) ?>,
+            <?= $yahrzeit->yahrzeit_date->display($yahrzeit->individual->tree()) ?>,
+            <?= I18N::translate('%s year anniversary', I18N::number($yahrzeit->fact->anniv)) ?>
+        </div>
+    </div>
+<?php endforeach ?>

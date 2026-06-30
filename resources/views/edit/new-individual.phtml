@@ -1,0 +1,64 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Services\GedcomEditService;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var GedcomEditService $gedcom_edit_service
+ * @var string            $post_url
+ * @var string            $title
+ * @var Tree              $tree
+ * @var string            $url
+ */
+
+?>
+
+<h2 class="wt-page-title"><?= $title ?></h2>
+
+<form method="post" action="<?= e($post_url) ?>">
+    <?php foreach ($facts ?? [] as $prefix => $prefix_facts) : ?>
+        <?php foreach ($prefix_facts as $n => $fact) : ?>
+            <div class="card mb-2">
+                <div class="card-header">
+                    <button class="btn btn-small btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#fact-<?= $prefix ?>-<?= $n ?>" aria-expanded="false" aria-controls="fact-<?= $prefix ?>-<?= $n ?>" data-wt-persist="<?= e($fact->tag()) ?>">
+                        <?= view('icons/expand') ?>
+                        <?= view('icons/collapse') ?>
+                    </button>
+                    <?= $fact->label() ?>
+                </div>
+                <div class="card-body pb-1 collapse" id="fact-<?= $prefix ?>-<?= $n ?>">
+                    <?= view('edit/edit-gedcom-fields', ['gedcom' => $gedcom_edit_service->insertMissingFactSubtags($fact, false), 'hierarchy' => explode(':', $fact->tag()), 'tree' => $fact->record()->tree(), 'prefix' => $prefix]) ?>
+                </div>
+            </div>
+        <?php endforeach ?>
+    <?php endforeach ?>
+
+    <div class="row mb-3">
+        <div class="col-sm-9 offset-sm-3">
+            <button class="btn btn-primary" type="submit" name="url" value="<?= e($url) ?>">
+                <?= view('icons/save') ?>
+                <?= /* I18N: A button label. */
+                I18N::translate('save') ?>
+            </button>
+            <button class="btn btn-primary" type="submit">
+                <?= view('icons/save') ?>
+                <?= /* I18N: A button label. */
+                I18N::translate('go to new individual') ?>
+            </button>
+            <a class="btn btn-secondary" href="<?= e($url) ?>">
+                <?= view('icons/cancel') ?>
+                <?= /* I18N: A button label. */
+                I18N::translate('cancel') ?>
+            </a>
+        </div>
+    </div>
+
+    <?= csrf_field() ?>
+</form>
+
+<?= view('modals/on-screen-keyboard') ?>
+<?= view('modals/ajax') ?>
+<?= view('edit/initialize-calendar-popup') ?>

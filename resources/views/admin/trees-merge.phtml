@@ -1,0 +1,66 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Http\RequestHandlers\ControlPanel;
+use Fisharebest\Webtrees\Http\RequestHandlers\MergeTreesAction;
+use Fisharebest\Webtrees\Http\RequestHandlers\RenumberTreePage;
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var string               $title
+ * @var Tree|null            $tree1
+ * @var Tree|null            $tree2
+ * @var array<string,string> $tree_list
+ * @var int                  $xrefs
+ */
+
+?>
+
+<?= view('components/breadcrumbs', ['links' => [route(ControlPanel::class) => I18N::translate('Control panel'), $title]]) ?>
+
+<h1><?= $title ?></h1>
+
+<?php if ($tree1 !== null && $tree2 !== null && $xrefs > 0) : ?>
+    <p>
+        <?= I18N::translate('In a family tree, each record has an internal reference number (called an “XREF”) such as “F123” or “R14”.') ?>
+    </p>
+    <p>
+        <?= I18N::plural(/* I18N: An XREF is the identification number used in GEDCOM files. */ 'The two family trees have %1$s record which uses the same “XREF”.', 'The two family trees have %1$s records which use the same “XREF”.', $xrefs, I18N::number($xrefs)) ?>
+    </p>
+    <p>
+        <?= I18N::translate('You must renumber the records in one of the trees before you can merge them.') ?>
+    </p>
+    <p>
+        <a class="current" href="<?= e(route(RenumberTreePage::class, ['tree' => $tree1->name()])) ?>">
+            <?= I18N::translate('Renumber XREFs') ?> — <?= e($tree1->title()) ?>
+        </a>
+    </p>
+    <p>
+        <a class="current" href="<?= e(route(RenumberTreePage::class, ['tree' => $tree2->name()])) ?>">
+            <?= I18N::translate('Renumber XREFs') ?> — <?= e($tree2->title()) ?>
+        </a>
+    </p>
+<?php endif ?>
+
+<form method="post" action="<?= e(route(MergeTreesAction::class)) ?>">
+    <div>
+        <?= I18N::translate(/* I18N: Copy all the records from [family tree 1] into [family tree 2] */
+            'Copy all the records from %1$s into %2$s.',
+            view('components/select', ['name' => 'tree1_name', 'selected' => $tree1 instanceof Tree ? $tree1->name() : '', 'options' => $tree_list]),
+            view('components/select', ['name' => 'tree2_name', 'selected' => $tree2 instanceof Tree ? $tree2->name() : '', 'options' => $tree_list])
+        ) ?>
+    </div>
+
+    <div>
+        <button type="submit" class="btn btn-primary">
+            <?= view('icons/save') ?>
+            <?= I18N::translate('continue') ?>
+        </button>
+    </div>
+
+    <?= csrf_field() ?>
+</form>
+
+<?= I18N::translate('Caution! This may take a long time. Be patient.') ?>

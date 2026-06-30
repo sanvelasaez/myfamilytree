@@ -1,0 +1,60 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Http\RequestHandlers\LinkChildToFamilyAction;
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Individual;
+use Fisharebest\Webtrees\Registry;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var Individual $individual
+ * @var string     $title
+ * @var Tree       $tree
+ * @var string     $xref
+ */
+
+?>
+
+<h2 class="wt-page-title"><?= $title ?></h2>
+
+<form method="post" action="<?= e(route(LinkChildToFamilyAction::class, ['tree' => $tree->name(), 'xref' => $xref])) ?>" class="wt-page-content">
+    <div class="row mb-3">
+        <label class="col-sm-3 col-form-label" for="famid">
+            <?= I18N::translate('Family') ?>
+        </label>
+        <div class="col-sm-9">
+            <?= view('components/select-family', ['name' => 'famid', 'tree' => $tree]) ?>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label class="col-sm-3 col-form-label" for="PEDI">
+            <?= Registry::elementFactory()->make('INDI:FAMC:PEDI')->label() ?>
+        </label>
+        <div class="col-sm-9">
+            <?= Registry::elementFactory()->make('INDI:FAMC:PEDI')->edit('PEDI', 'PEDI', '', $tree) ?>
+            <div class="form-text">
+                <?= I18N::translate('A child may have more than one set of parents. The relationship between the child and the parents can be biological, legal, or based on local culture and tradition. If no pedigree is specified, then a biological relationship will be assumed.') ?>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-sm-9 offset-sm-3">
+            <button class="btn btn-primary" type="submit">
+                <?= view('icons/save') ?>
+                <?= /* I18N: A button label. */
+                I18N::translate('save') ?>
+            </button>
+            <a class="btn btn-secondary" href="<?= e($individual->url()) ?>">
+                <?= view('icons/cancel') ?>
+                <?= /* I18N: A button label. */
+                I18N::translate('cancel') ?>
+            </a>
+        </div>
+    </div>
+
+    <?= csrf_field() ?>
+</form>

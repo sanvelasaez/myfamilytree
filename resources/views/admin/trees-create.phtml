@@ -1,0 +1,69 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Http\RequestHandlers\ControlPanel;
+use Fisharebest\Webtrees\Http\RequestHandlers\CreateTreeAction;
+use Fisharebest\Webtrees\I18N;
+
+/**
+ * @var string $title
+ * @var string $tree_name
+ * @var string $tree_title
+ */
+
+?>
+
+<?= view('components/breadcrumbs', ['links' => [route(ControlPanel::class) => I18N::translate('Control panel'), $title]]) ?>
+
+<h1><?= $title ?></h1>
+
+
+<form method="post" action="<?= e(route(CreateTreeAction::class)) ?>" class="form-horizontal">
+    <div class="row mb-3">
+        <label for="title" class="col-sm-2 col-form-label">
+            <?= I18N::translate('Family tree title') ?>
+        </label>
+        <div class="col-sm-10">
+            <input class="form-control" id="title" maxlength="255" name="title" required="required" type="text" value="<?= e($tree_title) ?>">
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label for="name" class="col-sm-2 col-form-label">
+            <?= I18N::translate('URL') ?>
+        </label>
+        <div class="col-sm-10">
+            <div class="input-group" dir="ltr">
+                <span class="input-group-text" dir="ltr">
+                    <?= e(explode('{tree}', rawurldecode(route('example')))[0]) ?>
+                </span>
+
+                <input class="form-control" id="name" maxlength="31" name="name" pattern="[^&lt;&gt;&quot;*?{}():/\\$%|]*" required="required" type="text" value="<?= e($tree_name) ?>" dir="ltr">
+
+                <span class="input-group-text" dir="ltr">
+                    <?= e(explode('{tree}', rawurldecode(route('example')))[1]) ?>
+                </span>
+            </div>
+            <div class="form-text">
+                <?= I18N::translate('Avoid spaces and punctuation. A family name might be a good choice.') ?>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="offset-sm-2 col-sm-10">
+            <button type="submit" class="btn btn-primary">
+                <?= view('icons/save') ?>
+                <?= /* I18N: A button label. */
+                I18N::translate('create') ?>
+            </button>
+            <div class="form-text">
+                <?= I18N::translate('After creating the family tree, you will be able to import data from a GEDCOM file.') ?>
+            </div>
+        </div>
+    </div>
+
+    <?= csrf_field() ?>
+</form>
+
+
+<?= view('modals/ajax') ?>
