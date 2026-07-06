@@ -1,0 +1,6 @@
+<?php
+
+$view = view('::lists/sources-table', get_defined_vars());
+$view = preg_replace('/table-sm wt-table-source/', 'wt-table-source', $view); // Remove small class from table
+
+echo $view;

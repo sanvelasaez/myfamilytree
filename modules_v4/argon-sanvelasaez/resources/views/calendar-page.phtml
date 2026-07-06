@@ -1,0 +1,8 @@
+<?php
+
+$view = view('::calendar-page', get_defined_vars());
+
+$view = preg_replace('/table class="w-100"/', 'table class="w-100 my-3"', $view); // Add vertical margins around "view" options
+$view = preg_replace('/td class="topbottombar text-center"/', 'td class="topbottombar text-center py-2"', $view); // Add vertical padding around "view" options
+
+echo $view;

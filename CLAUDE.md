@@ -70,6 +70,22 @@ This repo runs on Windows. `ctx_batch_execute` and Bash tool use POSIX shell —
 
 `vendor/` is committed to git. `composer.json` and `package.json` are **not** in this repo (upstream source only) — do not expect them to exist locally.
 
+## Installing third-party modules
+
+1. Check compatibility: module must declare `fisharebest/webtrees: ^2.2` in `composer.json`.
+2. Check if compiled assets are committed (look for CSS in `resources/` — if gitignored, build step needed first).
+3. Download: use source archive if no binary assets in GitHub release:
+   ```powershell
+   Invoke-WebRequest -Uri "https://github.com/{owner}/{repo}/archive/refs/tags/{version}.zip" -OutFile "$env:TEMP\module.zip" -UseBasicParsing
+   Expand-Archive -Path "$env:TEMP\module.zip" -DestinationPath "$env:TEMP\module-extract" -Force
+   Move-Item -Path "$env:TEMP\module-extract\{extracted-folder}" -Destination "D:\workspace\docker\www\webtrees\modules_v4\{module-name}"
+   ```
+4. Folder name must match what the module's README specifies (≠ repo name).
+5. Activate: Admin → Control panel → Modules → enable.
+
+Installed third-party modules:
+- `evang-argonlight` — Argon Light Theme v2.0.2 (https://github.com/06Games/Webtrees-ArgonLight)
+
 ## Coding standards
 
 PHP: PSR-1, PSR-2, PSR-12. JavaScript: semistandard. Strict types declared in all PHP files (`declare(strict_types=1)`).

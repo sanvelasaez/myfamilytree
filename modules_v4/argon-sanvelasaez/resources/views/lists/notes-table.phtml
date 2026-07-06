@@ -1,0 +1,6 @@
+<?php
+
+$view = view('::lists/notes-table', get_defined_vars());
+$view = preg_replace('/table-bordered table-sm wt-table-note/', 'wt-table-note', $view); // Remove small and bordered classes from table
+
+echo $view;

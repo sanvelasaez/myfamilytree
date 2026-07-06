@@ -1,0 +1,6 @@
+<?php
+
+$view = view('::lists/repositories-table', get_defined_vars());
+$view = preg_replace('/table-bordered table-sm wt-table-repository/', 'wt-table-repository', $view); // Remove small and bordered classes from table
+
+echo $view;
