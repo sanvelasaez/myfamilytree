@@ -1,0 +1,102 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Individual;
+use ImprovedTree\ImprovedTreeModule;
+
+/**
+ * @var string             $graph_url
+ * @var Individual         $individual
+ * @var ImprovedTreeModule $module
+ * @var string             $title
+ */
+
+?>
+
+<h2 class="wt-page-title"><?= e($title) ?></h2>
+
+<link rel="stylesheet" href="<?= e($module->assetUrl('css/improved-tree.css')) ?>">
+
+<div class="itree-page-controls d-print-none">
+    <label>
+        <?= I18N::translate('Ancestor depth') ?>
+        <select id="itree-ancestor-depth">
+            <?php foreach ([2, 3, 4, 5, 6] as $depth) : ?>
+                <option value="<?= $depth ?>" <?= $depth === 4 ? 'selected' : '' ?>><?= $depth ?></option>
+            <?php endforeach ?>
+        </select>
+    </label>
+
+    <label>
+        <?= I18N::translate('Descendant depth') ?>
+        <select id="itree-descendant-depth">
+            <?php foreach ([2, 3, 4, 5, 6] as $depth) : ?>
+                <option value="<?= $depth ?>" <?= $depth === 4 ? 'selected' : '' ?>><?= $depth ?></option>
+            <?php endforeach ?>
+        </select>
+    </label>
+
+    <label>
+        <input type="checkbox" id="itree-include-spouses" checked> <?= I18N::translate('Show spouses') ?>
+    </label>
+
+    <label>
+        <input type="checkbox" id="itree-show-photos" checked> <?= I18N::translate('Show photos') ?>
+    </label>
+
+    <button id="itree-refresh" type="button" class="btn btn-sm btn-secondary"><?= I18N::translate('Refresh') ?></button>
+    <button id="itree-center" type="button" class="btn btn-sm btn-secondary"><?= I18N::translate('Center') ?></button>
+</div>
+
+<div class="itree-page-canvas">
+    <div data-truncated class="itree-truncated-notice" style="display: none;">
+        <?= I18N::translate('The tree was truncated because it reached the node limit for your role.') ?>
+    </div>
+    <div id="itree-loading" data-loading style="display: none;">
+        <?= view('icons/spinner') ?>
+    </div>
+    <svg id="itree-svg" width="100%" height="800"></svg>
+</div>
+
+<script src="<?= e($module->assetUrl('js/improved-tree.js')) ?>"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const graphUrl = <?= json_encode($graph_url) ?>;
+        const svg = document.getElementById('itree-svg');
+        const ancestorDepth = document.getElementById('itree-ancestor-depth');
+        const descendantDepth = document.getElementById('itree-descendant-depth');
+        const includeSpouses = document.getElementById('itree-include-spouses');
+        const showPhotos = document.getElementById('itree-show-photos');
+        const refreshBtn = document.getElementById('itree-refresh');
+        const centerBtn = document.getElementById('itree-center');
+
+        const renderer = new window.ImprovedTree.TreeRenderer(svg);
+
+        function currentParams() {
+            return {
+                ancestor_depth: ancestorDepth.value,
+                descendant_depth: descendantDepth.value,
+                include_spouses: includeSpouses.checked ? '1' : '0',
+                show_photos: showPhotos.checked ? '1' : '0',
+            };
+        }
+
+        function loadGraph() {
+            renderer.loadGraph(graphUrl, currentParams());
+        }
+
+        refreshBtn.addEventListener('click', loadGraph);
+        ancestorDepth.addEventListener('change', loadGraph);
+        descendantDepth.addEventListener('change', loadGraph);
+        includeSpouses.addEventListener('change', loadGraph);
+        showPhotos.addEventListener('change', loadGraph);
+
+        centerBtn.addEventListener('click', function () {
+            renderer.centerOnRoot();
+        });
+
+        loadGraph();
+    });
+</script>

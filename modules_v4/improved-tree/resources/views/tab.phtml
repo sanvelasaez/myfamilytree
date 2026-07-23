@@ -1,0 +1,32 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Individual;
+use ImprovedTree\ImprovedTreeModule;
+
+/**
+ * @var string             $graph_url
+ * @var Individual         $individual
+ * @var ImprovedTreeModule $module
+ */
+
+?>
+
+<div class="itree-container" data-improved-tree data-graph-url="<?= e($graph_url) ?>">
+    <div class="itree-toolbar">
+        <button type="button" class="btn btn-sm btn-primary itree-center-btn" title="<?= e(I18N::translate('Center on root')) ?>">
+            <?= I18N::translate('Center') ?>
+        </button>
+    </div>
+    <div class="itree-canvas">
+        <div data-truncated class="itree-truncated-notice" style="display: none;">
+            <?= I18N::translate('The tree was truncated because it reached the node limit for your role.') ?>
+        </div>
+        <div data-loading style="display: none;">
+            <?= view('icons/spinner') ?>
+        </div>
+        <svg width="100%" height="600"></svg>
+    </div>
+</div>

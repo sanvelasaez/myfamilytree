@@ -1,0 +1,100 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\Http\RequestHandlers\ControlPanel;
+use Fisharebest\Webtrees\Http\RequestHandlers\ModulesAllPage;
+use Fisharebest\Webtrees\I18N;
+use ImprovedTree\ImprovedTreeModule;
+
+/**
+ * @var ImprovedTreeModule  $module
+ * @var array<string,string> $preferences
+ * @var string              $title
+ */
+
+?>
+
+<?= view('components/breadcrumbs', ['links' => [route(ControlPanel::class) => I18N::translate('Control panel'), route(ModulesAllPage::class) => I18N::translate('Modules'), $title]]) ?>
+
+<h1><?= e($title) ?></h1>
+
+<form method="post" action="<?= e(route('module', ['module' => $module->name(), 'action' => 'Admin'])) ?>">
+    <?= csrf_field() ?>
+
+    <h3><?= I18N::translate('Defaults') ?></h3>
+
+    <div class="row mb-3">
+        <label class="col-sm-3 col-form-label" for="default_mode"><?= I18N::translate('Layout') ?></label>
+        <div class="col-sm-9">
+            <select id="default_mode" name="default_mode" class="form-select">
+                <option value="vertical" <?= $preferences['default_mode'] === 'vertical' ? 'selected' : '' ?>><?= I18N::translate('Vertical') ?></option>
+            </select>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label class="col-sm-3 col-form-label" for="default_ancestor_depth"><?= I18N::translate('Default ancestor depth') ?></label>
+        <div class="col-sm-9">
+            <?= view('components/select', ['name' => 'default_ancestor_depth', 'id' => 'default_ancestor_depth', 'selected' => $preferences['default_ancestor_depth'], 'options' => array_combine(range(1, 10), range(1, 10))]) ?>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label class="col-sm-3 col-form-label" for="default_descendant_depth"><?= I18N::translate('Default descendant depth') ?></label>
+        <div class="col-sm-9">
+            <?= view('components/select', ['name' => 'default_descendant_depth', 'id' => 'default_descendant_depth', 'selected' => $preferences['default_descendant_depth'], 'options' => array_combine(range(1, 10), range(1, 10))]) ?>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-sm-9 offset-sm-3">
+            <div class="form-check">
+                <input type="hidden" name="default_include_spouses" value="0">
+                <input type="checkbox" id="default_include_spouses" name="default_include_spouses" value="1" class="form-check-input" <?= $preferences['default_include_spouses'] === '1' ? 'checked' : '' ?>>
+                <label class="form-check-label" for="default_include_spouses"><?= I18N::translate('Include spouses by default') ?></label>
+            </div>
+            <div class="form-check">
+                <input type="hidden" name="default_include_siblings" value="0">
+                <input type="checkbox" id="default_include_siblings" name="default_include_siblings" value="1" class="form-check-input" <?= $preferences['default_include_siblings'] === '1' ? 'checked' : '' ?>>
+                <label class="form-check-label" for="default_include_siblings"><?= I18N::translate('Include siblings by default') ?></label>
+            </div>
+            <div class="form-check">
+                <input type="hidden" name="default_show_photos" value="0">
+                <input type="checkbox" id="default_show_photos" name="default_show_photos" value="1" class="form-check-input" <?= $preferences['default_show_photos'] === '1' ? 'checked' : '' ?>>
+                <label class="form-check-label" for="default_show_photos"><?= I18N::translate('Show photos by default') ?></label>
+            </div>
+            <div class="form-check">
+                <input type="hidden" name="default_show_dates" value="0">
+                <input type="checkbox" id="default_show_dates" name="default_show_dates" value="1" class="form-check-input" <?= $preferences['default_show_dates'] === '1' ? 'checked' : '' ?>>
+                <label class="form-check-label" for="default_show_dates"><?= I18N::translate('Show dates by default') ?></label>
+            </div>
+        </div>
+    </div>
+
+    <h3><?= I18N::translate('Node limits') ?></h3>
+    <p class="text-muted"><?= I18N::translate('The maximum number of individuals rendered in a single tree, by role. Requests for more are truncated.') ?></p>
+
+    <div class="row mb-3">
+        <label class="col-sm-3 col-form-label" for="max_nodes_guest"><?= I18N::translate('Maximum nodes for visitors') ?></label>
+        <div class="col-sm-9">
+            <input type="number" id="max_nodes_guest" name="max_nodes_guest" value="<?= e($preferences['max_nodes_guest']) ?>" min="100" max="2000" class="form-control">
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label class="col-sm-3 col-form-label" for="max_nodes_user"><?= I18N::translate('Maximum nodes for logged-in users') ?></label>
+        <div class="col-sm-9">
+            <input type="number" id="max_nodes_user" name="max_nodes_user" value="<?= e($preferences['max_nodes_user']) ?>" min="100" max="2000" class="form-control">
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label class="col-sm-3 col-form-label" for="max_nodes_admin"><?= I18N::translate('Maximum nodes for administrators') ?></label>
+        <div class="col-sm-9">
+            <input type="number" id="max_nodes_admin" name="max_nodes_admin" value="<?= e($preferences['max_nodes_admin']) ?>" min="100" max="5000" class="form-control">
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary"><?= I18N::translate('save') ?></button>
+</form>
