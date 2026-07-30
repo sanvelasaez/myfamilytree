@@ -1,0 +1,39 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+use ImprovedTree\ImprovedTreeModule;
+
+/**
+ * @var string             $tree_url
+ * @var ImprovedTreeModule $module
+ */
+
+?>
+
+<link rel="stylesheet" href="<?= e($module->assetUrl('css/improved-tree.css')) ?>">
+
+<div class="itree-cta itree-cta--block">
+    <span class="itree-cta__glyph" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="2.5" width="6" height="4.5" rx="1"></rect>
+            <rect x="3" y="17" width="6" height="4.5" rx="1"></rect>
+            <rect x="15" y="17" width="6" height="4.5" rx="1"></rect>
+            <path d="M12 7v4M6 17v-2.5a1.5 1.5 0 0 1 1.5-1.5h9a1.5 1.5 0 0 1 1.5 1.5V17"></path>
+        </svg>
+    </span>
+
+    <div class="itree-cta__body">
+        <span class="itree-cta__eyebrow"><?= I18N::translate('Family tree') ?></span>
+        <p class="itree-cta__title"><?= I18N::translate('Explore your family tree') ?></p>
+        <p class="itree-cta__lead"><?= I18N::translate('Open the interactive tree on a full screen and navigate between all your relatives.') ?></p>
+    </div>
+
+    <a href="<?= e($tree_url) ?>" class="itree-cta__btn" rel="nofollow">
+        <?= I18N::translate('Open family tree') ?>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6"></path>
+        </svg>
+    </a>
+</div>

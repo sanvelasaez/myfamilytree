@@ -59,6 +59,20 @@ use ImprovedTree\ImprovedTreeModule;
                 <input type="checkbox" id="default_include_siblings" name="default_include_siblings" value="1" class="form-check-input" <?= $preferences['default_include_siblings'] === '1' ? 'checked' : '' ?>>
                 <label class="form-check-label" for="default_include_siblings"><?= I18N::translate('Include siblings by default') ?></label>
             </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label class="col-sm-3 col-form-label" for="default_consanguinity_degree"><?= I18N::translate('Default consanguinity degree') ?></label>
+        <div class="col-sm-9">
+            <?= view('components/select', ['name' => 'default_consanguinity_degree', 'id' => 'default_consanguinity_degree', 'selected' => $preferences['default_consanguinity_degree'], 'options' => [0 => I18N::translate('Off (use levels)')] + array_combine(range(1, 8), array_map(static fn(int $d): string => I18N::translate('Degree %s', $d), range(1, 8)))]) ?>
+            <div class="form-text text-muted"><?= I18N::translate('When set, the tree shows all relatives within this civil-law degree, replacing the ancestor/descendant levels.') ?></div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-sm-9 offset-sm-3">
+            <div>
             <div class="form-check">
                 <input type="hidden" name="default_show_photos" value="0">
                 <input type="checkbox" id="default_show_photos" name="default_show_photos" value="1" class="form-check-input" <?= $preferences['default_show_photos'] === '1' ? 'checked' : '' ?>>
@@ -69,6 +83,19 @@ use ImprovedTree\ImprovedTreeModule;
                 <input type="checkbox" id="default_show_dates" name="default_show_dates" value="1" class="form-check-input" <?= $preferences['default_show_dates'] === '1' ? 'checked' : '' ?>>
                 <label class="form-check-label" for="default_show_dates"><?= I18N::translate('Show dates by default') ?></label>
             </div>
+        </div>
+    </div>
+
+    <h3><?= I18N::translate('Home page') ?></h3>
+
+    <div class="row mb-3">
+        <div class="col-sm-9 offset-sm-3">
+            <div class="form-check">
+                <input type="hidden" name="show_home_button" value="0">
+                <input type="checkbox" id="show_home_button" name="show_home_button" value="1" class="form-check-input" <?= $preferences['show_home_button'] === '1' ? 'checked' : '' ?>>
+                <label class="form-check-label" for="show_home_button"><?= I18N::translate('Show a “Family tree” button in the main menu') ?></label>
+            </div>
+            <div class="form-text text-muted"><?= I18N::translate('Adds a button to the main menu (shown on the home page and everywhere else) that opens the full-screen tree, rooted on the tree’s default individual.') ?></div>
         </div>
     </div>
 

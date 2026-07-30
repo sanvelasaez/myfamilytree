@@ -24,13 +24,7 @@ class GraphBuilder
         bool $include_siblings = false,
         int $limit = 500
     ): array {
-        $this->nodes = [];
-        $this->edges = [];
-        $this->visited = [];
-        $this->nodeCount = 0;
-        $this->limit = max($limit, 1);
-        $this->truncated = false;
-        $this->rootXref = $root->xref();
+        $this->reset($root, $limit);
 
         $this->addNode($root, 0);
 
@@ -38,7 +32,7 @@ class GraphBuilder
             $this->addSiblings($root);
         }
 
-        $ancestor_frontier = [$root];
+        $ancestor_frontier   = [$root];
         $descendant_frontier = [$root];
         $descendant_generation = 0;
         $max_level = max($ancestor_depth, $descendant_depth);
@@ -59,6 +53,117 @@ class GraphBuilder
         }
 
         return $this->getResult();
+    }
+
+    /**
+     * Build a graph showing all individuals within the given civil-law consanguinity degree.
+     *
+     * Civil-law degree (Spanish): number of genealogical steps between two persons through
+     * their nearest common ancestor (the ancestor itself is not counted).
+     *   - Parents/children: degree 1
+     *   - Siblings / grandparents: degree 2
+     *   - Uncles/aunts / great-grandparents: degree 3
+     *   - First cousins: degree 4
+     *   - Children of first cousins: degree 5
+     *
+     * Algorithm:
+     *   Phase 1 — BFS upward: collect all ancestors with depth k (generations above root).
+     *   Phase 2 — BFS downward from each ancestor: expand up to (degree - k) steps down.
+     *   Generation of a node = k - d  (positive = above root, negative = below root).
+     *   Consanguinity degree of that node = k + d.
+     */
+    public function buildGraphByDegree(
+        Individual $root,
+        int $degree,
+        bool $include_spouses = true,
+        int $limit = 500
+    ): array {
+        $this->reset($root, $limit);
+
+        // Phase 1: BFS upward — collect all ancestors with their depth k above root.
+        // Stop expanding when k >= degree (nothing useful can be reached further up).
+        $ancestors = [$root->xref() => [$root, 0]];
+        $up_queue  = [[$root, 0]];
+        $uqi       = 0;
+
+        while ($uqi < count($up_queue)) {
+            [$ind, $k] = $up_queue[$uqi++];
+
+            if ($k >= $degree) {
+                continue;
+            }
+
+            foreach ($ind->childFamilies() as $family) {
+                foreach ($family->spouses() as $parent) {
+                    $pxref = $parent->xref();
+                    if (!isset($ancestors[$pxref])) {
+                        $ancestors[$pxref] = [$parent, $k + 1];
+                        $up_queue[] = [$parent, $k + 1];
+                    }
+                }
+            }
+        }
+
+        // Phase 2: from each ancestor at depth k, BFS downward up to (degree - k) steps.
+        foreach ($ancestors as [$ancestor, $k]) {
+            if ($this->truncated) {
+                break;
+            }
+
+            $this->addNode($ancestor, $k);
+
+            $down_queue = [[$ancestor, 0]];
+            $dqi        = 0;
+
+            while ($dqi < count($down_queue)) {
+                [$ind, $d] = $down_queue[$dqi++];
+
+                if ($degree - $k - $d <= 0) {
+                    continue;
+                }
+
+                $gen = $k - $d;
+
+                foreach ($ind->spouseFamilies() as $family) {
+                    if ($include_spouses) {
+                        foreach ($family->spouses() as $spouse) {
+                            if ($spouse->xref() === $ind->xref()) {
+                                continue;
+                            }
+                            $status = $this->addNode($spouse, $gen);
+                            if ($status === 'limit') {
+                                return $this->getResult();
+                            }
+                            $this->addEdge($ind->xref(), $spouse->xref(), 'SPOUSE');
+                        }
+                    }
+
+                    foreach ($family->children() as $child) {
+                        $status = $this->addNode($child, $gen - 1);
+                        if ($status === 'limit') {
+                            return $this->getResult();
+                        }
+                        $this->addEdge($child->xref(), $ind->xref(), 'CHILD');
+                        if ($status === 'new') {
+                            $down_queue[] = [$child, $d + 1];
+                        }
+                    }
+                }
+            }
+        }
+
+        return $this->getResult();
+    }
+
+    private function reset(Individual $root, int $limit): void
+    {
+        $this->nodes     = [];
+        $this->edges     = [];
+        $this->visited   = [];
+        $this->nodeCount = 0;
+        $this->limit     = max($limit, 1);
+        $this->truncated = false;
+        $this->rootXref  = $root->xref();
     }
 
     /**
@@ -86,7 +191,7 @@ class GraphBuilder
         $this->nodes[$xref] = [
             'id' => $xref,
             'type' => 'individual',
-            'label' => $individual->fullName(),
+            'label' => strip_tags($individual->fullName()),
             'url' => $individual->url(),
             'sex' => $individual->sex(),
             'lifespan' => $this->getLifespan($individual),
@@ -198,6 +303,14 @@ class GraphBuilder
     {
         $edge_id = $from . '-' . $to . '-' . $kind;
 
+        // For undirected relationships, avoid adding both directions as separate edges.
+        if ($kind === 'SPOUSE' || $kind === 'SIBLING') {
+            $reverse_id = $to . '-' . $from . '-' . $kind;
+            if (isset($this->edges[$reverse_id])) {
+                return;
+            }
+        }
+
         if (!isset($this->edges[$edge_id])) {
             $this->edges[$edge_id] = [
                 'id' => $edge_id,
@@ -210,22 +323,8 @@ class GraphBuilder
 
     private function getLifespan(Individual $individual): ?string
     {
-        $birth_year = '';
-        $death_year = '';
-
-        foreach ($individual->facts(['BIRT']) as $fact) {
-            $birth_year = $fact->date()->minimumDate()->year() ?? '';
-            if ($birth_year) {
-                break;
-            }
-        }
-
-        foreach ($individual->facts(['DEAT']) as $fact) {
-            $death_year = $fact->date()->minimumDate()->year() ?? '';
-            if ($death_year) {
-                break;
-            }
-        }
+        $birth_year = $individual->getBirthDate()->minimumDate()->year ?: '';
+        $death_year = $individual->getDeathDate()->minimumDate()->year ?: '';
 
         if ($birth_year || $death_year) {
             return trim($birth_year . '-' . $death_year, '-');

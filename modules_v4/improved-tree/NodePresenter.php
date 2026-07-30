@@ -64,7 +64,7 @@ class NodePresenter
             $media = $fact->target();
             if ($media !== null && $media->canShow()) {
                 foreach ($media->mediaFiles() as $media_file) {
-                    return $media_file->imageUrl(100, 100, 'thumb');
+                    return $media_file->imageUrl(100, 100, 'crop');
                 }
             }
         }
