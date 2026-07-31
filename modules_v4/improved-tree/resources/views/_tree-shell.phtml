@@ -1,0 +1,191 @@
+<?php
+
+declare(strict_types=1);
+
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Individual;
+
+/**
+ * Shared tree "shell": the full-viewport chrome (bar, controls, SVG stage).
+ * Rendered both as a standalone page (page.phtml) and injected as an overlay
+ * via the Modal action. It carries no <script>: the global bundle finds any
+ * `.itree-fs[data-graph-url]` and mounts the interaction (see improved-tree.js).
+ *
+ * @var string     $graph_url
+ * @var string     $detail_url
+ * @var string     $search_url
+ * @var string     $tree_url
+ * @var string     $back_url
+ * @var Individual $individual
+ * @var int        $default_link_level
+ * @var int        $default_ancestor_depth
+ * @var int        $default_descendant_depth
+ * @var bool       $default_include_spouses
+ * @var bool       $default_include_siblings
+ * @var bool       $default_show_photos
+ */
+
+?>
+
+<div class="itree-fs" id="itree-fs"
+     data-graph-url="<?= e($graph_url) ?>"
+     data-detail-url="<?= e($detail_url) ?>"
+     data-search-url="<?= e($search_url) ?>"
+     data-tree-url="<?= e($tree_url) ?>"
+     data-root-xref="<?= e($individual->xref()) ?>"
+     data-back-url="<?= e($back_url) ?>">
+
+    <header class="itree-fs__bar">
+        <a href="<?= e($back_url) ?>" class="itree-fs__close" data-itree-close title="<?= e(I18N::translate('close')) ?>" aria-label="<?= e(I18N::translate('close')) ?>">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18"></path>
+            </svg>
+        </a>
+
+        <div class="itree-fs__nav" data-itree-nav>
+            <button type="button" class="itree-fs__navbtn" data-itree-back disabled title="<?= e(I18N::translate('Back')) ?>" aria-label="<?= e(I18N::translate('Back')) ?>">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+            </button>
+            <button type="button" class="itree-fs__navbtn" data-itree-forward disabled title="<?= e(I18N::translate('Forward')) ?>" aria-label="<?= e(I18N::translate('Forward')) ?>">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+            </button>
+        </div>
+
+        <div class="itree-fs__id">
+            <span class="itree-fs__eyebrow"><?= I18N::translate('Family tree') ?></span>
+            <span class="itree-fs__root"><?= $individual->fullName() ?></span>
+            <nav class="itree-fs__crumbs" data-itree-crumbs aria-label="<?= e(I18N::translate('History')) ?>"></nav>
+        </div>
+
+        <div class="itree-fs__search" data-itree-search>
+            <svg class="itree-fs__search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+            <input type="search" class="itree-fs__search-input" data-itree-search-input placeholder="<?= e(I18N::translate('Search individuals')) ?>" autocomplete="off" spellcheck="false" aria-label="<?= e(I18N::translate('Search individuals')) ?>">
+            <div class="itree-fs__search-results" data-itree-search-results role="listbox" hidden></div>
+        </div>
+
+        <button type="button" class="itree-fs__btn itree-fs__btn--icon" data-itree-share title="<?= e(I18N::translate('Copy link')) ?>" aria-label="<?= e(I18N::translate('Copy link')) ?>">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"></path><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"></path></svg>
+        </button>
+
+        <div class="itree-fs__options d-print-none" data-itree-options>
+        <button type="button" class="itree-fs__toggle" data-itree-toggle aria-expanded="false" aria-haspopup="true" title="<?= e(I18N::translate('Options')) ?>" aria-label="<?= e(I18N::translate('Options')) ?>">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+        </button>
+
+        <div class="itree-fs__controls" data-itree-controls>
+            <label class="itree-fs__field">
+                <span><?= I18N::translate('Kinship level') ?></span>
+                <select data-itree-link-level>
+                    <option value="0" <?= $default_link_level === 0 ? 'selected' : '' ?>><?= I18N::translate('Off (use depths)') ?></option>
+                    <?php foreach (range(1, 8) as $lvl) : ?>
+                        <option value="<?= $lvl ?>" <?= $lvl === $default_link_level ? 'selected' : '' ?>><?= I18N::translate('Level %s', $lvl) ?></option>
+                    <?php endforeach ?>
+                </select>
+            </label>
+
+            <span data-itree-level-controls class="itree-fs__group">
+                <label class="itree-fs__field">
+                    <span><?= I18N::translate('Ancestor depth') ?></span>
+                    <select data-itree-ancestor-depth>
+                        <?php foreach ([2, 3, 4, 5, 6] as $depth) : ?>
+                            <option value="<?= $depth ?>" <?= $depth === $default_ancestor_depth ? 'selected' : '' ?>><?= $depth ?></option>
+                        <?php endforeach ?>
+                    </select>
+                </label>
+
+                <label class="itree-fs__field">
+                    <span><?= I18N::translate('Descendant depth') ?></span>
+                    <select data-itree-descendant-depth>
+                        <?php foreach ([2, 3, 4, 5, 6] as $depth) : ?>
+                            <option value="<?= $depth ?>" <?= $depth === $default_descendant_depth ? 'selected' : '' ?>><?= $depth ?></option>
+                        <?php endforeach ?>
+                    </select>
+                </label>
+
+                <label class="itree-fs__check">
+                    <input type="checkbox" data-itree-include-siblings <?= $default_include_siblings ? 'checked' : '' ?>>
+                    <?= I18N::translate('Siblings') ?>
+                </label>
+            </span>
+
+            <label class="itree-fs__check">
+                <input type="checkbox" data-itree-include-spouses <?= $default_include_spouses ? 'checked' : '' ?>>
+                <?= I18N::translate('Spouses') ?>
+            </label>
+
+            <label class="itree-fs__check">
+                <input type="checkbox" data-itree-show-photos <?= $default_show_photos ? 'checked' : '' ?>>
+                <?= I18N::translate('Photos') ?>
+            </label>
+
+            <button type="button" class="itree-fs__btn" data-itree-refresh><?= I18N::translate('Refresh') ?></button>
+
+            <span class="itree-fs__group itree-fs__group--export">
+                <button type="button" class="itree-fs__btn" data-itree-export-png title="<?= e(I18N::translate('Download as PNG')) ?>">PNG</button>
+                <button type="button" class="itree-fs__btn" data-itree-export-svg title="<?= e(I18N::translate('Download as SVG')) ?>">SVG</button>
+                <button type="button" class="itree-fs__btn" data-itree-print title="<?= e(I18N::translate('Print')) ?>"><?= I18N::translate('Print') ?></button>
+            </span>
+        </div>
+        </div>
+    </header>
+
+    <div class="itree-fs__stage">
+        <div data-truncated class="itree-fs__toast" style="display: none;">
+            <?= I18N::translate('The tree was truncated because it reached the node limit for your role.') ?>
+        </div>
+
+        <div data-loading class="itree-fs__loading" style="display: none;">
+            <?= view('icons/spinner') ?>
+        </div>
+
+        <svg class="itree-fs__svg" data-itree-svg width="100%" height="100%"></svg>
+
+        <div class="itree-minimap d-print-none" data-itree-minimap aria-hidden="true">
+            <svg class="itree-minimap__svg" data-itree-minimap-svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+
+        <div class="itree-fs__zoom d-print-none">
+            <button type="button" data-itree-zoom-in title="<?= e(I18N::translate('Zoom in')) ?>" aria-label="<?= e(I18N::translate('Zoom in')) ?>">+</button>
+            <button type="button" data-itree-zoom-out title="<?= e(I18N::translate('Zoom out')) ?>" aria-label="<?= e(I18N::translate('Zoom out')) ?>">&minus;</button>
+            <button type="button" data-itree-center title="<?= e(I18N::translate('Center')) ?>" aria-label="<?= e(I18N::translate('Center')) ?>">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path>
+                </svg>
+            </button>
+        </div>
+
+        <aside class="itree-panel" data-itree-panel aria-label="<?= e(I18N::translate('Details')) ?>">
+            <button type="button" class="itree-panel__collapse" data-itree-panel-collapse title="<?= e(I18N::translate('Collapse')) ?>" aria-label="<?= e(I18N::translate('Collapse')) ?>">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M15 6l-6 6 6 6"></path>
+                </svg>
+            </button>
+            <div class="itree-panel__body" data-itree-panel-body></div>
+        </aside>
+
+        <button type="button" class="itree-panel__open" data-itree-panel-open title="<?= e(I18N::translate('Details')) ?>" aria-label="<?= e(I18N::translate('Details')) ?>">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M9 6l6 6-6 6"></path>
+            </svg>
+        </button>
+
+        <div class="itree-lightbox" data-itree-lightbox hidden role="dialog" aria-modal="true" aria-label="<?= e(I18N::translate('Media')) ?>">
+            <button type="button" class="itree-lightbox__close" data-itree-lightbox-close title="<?= e(I18N::translate('close')) ?>" aria-label="<?= e(I18N::translate('close')) ?>">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+            </button>
+            <button type="button" class="itree-lightbox__nav itree-lightbox__nav--prev" data-itree-lightbox-prev title="<?= e(I18N::translate('Previous')) ?>" aria-label="<?= e(I18N::translate('Previous')) ?>">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+            </button>
+            <figure class="itree-lightbox__figure">
+                <img class="itree-lightbox__img" data-itree-lightbox-img src="" alt="">
+                <figcaption class="itree-lightbox__caption" data-itree-lightbox-caption></figcaption>
+            </figure>
+            <button type="button" class="itree-lightbox__nav itree-lightbox__nav--next" data-itree-lightbox-next title="<?= e(I18N::translate('Next')) ?>" aria-label="<?= e(I18N::translate('Next')) ?>">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+            </button>
+        </div>
+    </div>
+</div>

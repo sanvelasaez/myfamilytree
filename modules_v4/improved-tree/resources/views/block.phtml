@@ -7,6 +7,7 @@ use ImprovedTree\ImprovedTreeModule;
 
 /**
  * @var string             $tree_url
+ * @var string             $modal_url
  * @var ImprovedTreeModule $module
  */
 
@@ -30,7 +31,7 @@ use ImprovedTree\ImprovedTreeModule;
         <p class="itree-cta__lead"><?= I18N::translate('Open the interactive tree on a full screen and navigate between all your relatives.') ?></p>
     </div>
 
-    <a href="<?= e($tree_url) ?>" class="itree-cta__btn" rel="nofollow">
+    <a href="<?= e($tree_url) ?>" class="itree-cta__btn" rel="nofollow" data-itree-modal-url="<?= e($modal_url) ?>">
         <?= I18N::translate('Open family tree') ?>
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M5 12h14M13 6l6 6-6 6"></path>

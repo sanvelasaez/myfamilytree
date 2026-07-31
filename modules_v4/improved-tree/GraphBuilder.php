@@ -15,6 +15,8 @@ class GraphBuilder
     private int $limit = 500;
     private bool $truncated = false;
     private string $rootXref = '';
+    private bool $showPhotos = true;
+    private bool $showDates = true;
 
     public function buildGraph(
         Individual $root,
@@ -22,9 +24,11 @@ class GraphBuilder
         int $descendant_depth = 4,
         bool $include_spouses = true,
         bool $include_siblings = false,
-        int $limit = 500
+        int $limit = 500,
+        bool $show_photos = true,
+        bool $show_dates = true
     ): array {
-        $this->reset($root, $limit);
+        $this->reset($root, $limit, $show_photos, $show_dates);
 
         $this->addNode($root, 0);
 
@@ -56,96 +60,122 @@ class GraphBuilder
     }
 
     /**
-     * Build a graph showing all individuals within the given civil-law consanguinity degree.
+     * Build a graph of everyone within N "kinship links" of the root.
      *
-     * Civil-law degree (Spanish): number of genealogical steps between two persons through
-     * their nearest common ancestor (the ancestor itself is not counted).
-     *   - Parents/children: degree 1
-     *   - Siblings / grandparents: degree 2
-     *   - Uncles/aunts / great-grandparents: degree 3
-     *   - First cousins: degree 4
-     *   - Children of first cousins: degree 5
+     * Unlike a strict consanguinity degree, spouse edges are FREE (cost 0) while
+     * every parent/child (filiation) step costs one level. A couple therefore
+     * always travels together — and so do both of their blood networks: hopping
+     * from a person to their spouse never drops anyone who was visible before,
+     * which keeps the picture stable while navigating.
      *
-     * Algorithm:
-     *   Phase 1 — BFS upward: collect all ancestors with depth k (generations above root).
-     *   Phase 2 — BFS downward from each ancestor: expand up to (degree - k) steps down.
-     *   Generation of a node = k - d  (positive = above root, negative = below root).
-     *   Consanguinity degree of that node = k + d.
+     * Distances come from a 0-1 BFS (spouse = 0, filiation = 1). A node's layout
+     * generation is the net vertical displacement of its shortest path
+     * (parent = +1 above root, child = -1 below).
      */
-    public function buildGraphByDegree(
+    public function buildGraphByLinks(
         Individual $root,
-        int $degree,
+        int $max_level,
         bool $include_spouses = true,
-        int $limit = 500
+        int $limit = 500,
+        bool $show_photos = true,
+        bool $show_dates = true
     ): array {
-        $this->reset($root, $limit);
+        $this->reset($root, $limit, $show_photos, $show_dates);
 
-        // Phase 1: BFS upward — collect all ancestors with their depth k above root.
-        // Stop expanding when k >= degree (nothing useful can be reached further up).
-        $ancestors = [$root->xref() => [$root, 0]];
-        $up_queue  = [[$root, 0]];
-        $uqi       = 0;
+        $root_xref = $root->xref();
+        $level = [$root_xref => 0];   // link level each xref was settled at
+        $gen   = [$root_xref => 0];   // vertical generation for layout
+        $ref   = [$root_xref => $root];
 
-        while ($uqi < count($up_queue)) {
-            [$ind, $k] = $up_queue[$uqi++];
+        // 0-1 BFS. Spouse neighbours (weight 0) go to the front of the deque so
+        // they settle at the current level before we spend a level going up or
+        // down; filiation neighbours (weight 1) go to the back. Relaxation lowers
+        // a node's level if a cheaper path appears later. A safety cap stops
+        // pathological trees before the node limit trims the outer ring.
+        $front  = [$root];
+        $back   = [];
+        $safety = max($this->limit * 4, 2000);
 
-            if ($k >= $degree) {
+        while ($front !== [] || $back !== []) {
+            $ind = $front !== [] ? array_pop($front) : array_shift($back);
+            $xref = $ind->xref();
+            $lv   = $level[$xref];
+            $g    = $gen[$xref];
+
+            if ($include_spouses) {
+                foreach ($ind->spouseFamilies() as $family) {
+                    foreach ($family->spouses() as $spouse) {
+                        $sx = $spouse->xref();
+                        if ($sx === $xref || (isset($level[$sx]) && $level[$sx] <= $lv)) {
+                            continue;
+                        }
+                        $level[$sx] = $lv;
+                        $gen[$sx]   = $g;
+                        $ref[$sx]   = $spouse;
+                        $front[]    = $spouse;
+                    }
+                }
+            }
+
+            if ($lv >= $max_level || count($level) >= $safety) {
                 continue;
             }
 
             foreach ($ind->childFamilies() as $family) {
                 foreach ($family->spouses() as $parent) {
-                    $pxref = $parent->xref();
-                    if (!isset($ancestors[$pxref])) {
-                        $ancestors[$pxref] = [$parent, $k + 1];
-                        $up_queue[] = [$parent, $k + 1];
+                    $px = $parent->xref();
+                    if (isset($level[$px]) && $level[$px] <= $lv + 1) {
+                        continue;
                     }
+                    $level[$px] = $lv + 1;
+                    $gen[$px]   = $g + 1;
+                    $ref[$px]   = $parent;
+                    $back[]     = $parent;
+                }
+            }
+
+            foreach ($ind->spouseFamilies() as $family) {
+                foreach ($family->children() as $child) {
+                    $cx = $child->xref();
+                    if (isset($level[$cx]) && $level[$cx] <= $lv + 1) {
+                        continue;
+                    }
+                    $level[$cx] = $lv + 1;
+                    $gen[$cx]   = $g - 1;
+                    $ref[$cx]   = $child;
+                    $back[]     = $child;
                 }
             }
         }
 
-        // Phase 2: from each ancestor at depth k, BFS downward up to (degree - k) steps.
-        foreach ($ancestors as [$ancestor, $k]) {
-            if ($this->truncated) {
+        // Materialise nodes closest-first so the node limit trims the outer ring.
+        $order = array_keys($level);
+        usort($order, static fn (string $a, string $b): int => $level[$a] <=> $level[$b]);
+
+        foreach ($order as $xref) {
+            if ($this->addNode($ref[$xref], $gen[$xref]) === 'limit') {
                 break;
             }
+        }
 
-            $this->addNode($ancestor, $k);
+        // Edges among the materialised nodes. Each filiation link is emitted once,
+        // from the child's side, so parent/child pairs never double up.
+        foreach (array_keys($this->nodes) as $xref) {
+            $ind = $ref[$xref];
 
-            $down_queue = [[$ancestor, 0]];
-            $dqi        = 0;
-
-            while ($dqi < count($down_queue)) {
-                [$ind, $d] = $down_queue[$dqi++];
-
-                if ($degree - $k - $d <= 0) {
-                    continue;
-                }
-
-                $gen = $k - $d;
-
-                foreach ($ind->spouseFamilies() as $family) {
-                    if ($include_spouses) {
-                        foreach ($family->spouses() as $spouse) {
-                            if ($spouse->xref() === $ind->xref()) {
-                                continue;
-                            }
-                            $status = $this->addNode($spouse, $gen);
-                            if ($status === 'limit') {
-                                return $this->getResult();
-                            }
-                            $this->addEdge($ind->xref(), $spouse->xref(), 'SPOUSE');
-                        }
+            foreach ($ind->childFamilies() as $family) {
+                foreach ($family->spouses() as $parent) {
+                    if (isset($this->nodes[$parent->xref()])) {
+                        $this->addEdge($xref, $parent->xref(), 'CHILD');
                     }
+                }
+            }
 
-                    foreach ($family->children() as $child) {
-                        $status = $this->addNode($child, $gen - 1);
-                        if ($status === 'limit') {
-                            return $this->getResult();
-                        }
-                        $this->addEdge($child->xref(), $ind->xref(), 'CHILD');
-                        if ($status === 'new') {
-                            $down_queue[] = [$child, $d + 1];
+            if ($include_spouses) {
+                foreach ($ind->spouseFamilies() as $family) {
+                    foreach ($family->spouses() as $spouse) {
+                        if ($spouse->xref() !== $xref && isset($this->nodes[$spouse->xref()])) {
+                            $this->addEdge($xref, $spouse->xref(), 'SPOUSE');
                         }
                     }
                 }
@@ -155,15 +185,17 @@ class GraphBuilder
         return $this->getResult();
     }
 
-    private function reset(Individual $root, int $limit): void
+    private function reset(Individual $root, int $limit, bool $show_photos, bool $show_dates): void
     {
-        $this->nodes     = [];
-        $this->edges     = [];
-        $this->visited   = [];
-        $this->nodeCount = 0;
-        $this->limit     = max($limit, 1);
-        $this->truncated = false;
-        $this->rootXref  = $root->xref();
+        $this->nodes      = [];
+        $this->edges      = [];
+        $this->visited    = [];
+        $this->nodeCount  = 0;
+        $this->limit      = max($limit, 1);
+        $this->truncated  = false;
+        $this->rootXref   = $root->xref();
+        $this->showPhotos = $show_photos;
+        $this->showDates  = $show_dates;
     }
 
     /**
@@ -188,17 +220,40 @@ class GraphBuilder
         }
 
         $this->visited[$xref] = true;
+
+        // Privacy first: only compute the expensive fields (name, dates, photo) for
+        // data the viewer may actually see. This is the single pass that used to be
+        // split between the builder and a separate presenter.
+        $can_show_name = $individual->canShowName();
+        $can_show      = $individual->canShow();
+
+        if (!$can_show_name) {
+            $label     = '?';
+            $lifespan  = null;
+            $thumbnail = null;
+        } elseif (!$can_show) {
+            // Name visible but other data (dates, photo) hidden.
+            $label     = strip_tags($individual->fullName());
+            $lifespan  = null;
+            $thumbnail = null;
+        } else {
+            $label     = strip_tags($individual->fullName());
+            $lifespan  = $this->showDates ? $this->getLifespan($individual) : null;
+            $thumbnail = $this->showPhotos ? $this->getThumbnail($individual) : null;
+        }
+
         $this->nodes[$xref] = [
             'id' => $xref,
             'type' => 'individual',
-            'label' => strip_tags($individual->fullName()),
+            'label' => $label,
             'url' => $individual->url(),
             'sex' => $individual->sex(),
-            'lifespan' => $this->getLifespan($individual),
+            'lifespan' => $lifespan,
             'generation' => $generation,
-            'thumbnail' => null,
+            'thumbnail' => $thumbnail,
             'isRoot' => $xref === $this->rootXref,
             'isImplex' => false,
+            'limited' => !$can_show && $can_show_name,
         ];
         $this->nodeCount++;
 
@@ -328,6 +383,20 @@ class GraphBuilder
 
         if ($birth_year || $death_year) {
             return trim($birth_year . '-' . $death_year, '-');
+        }
+
+        return null;
+    }
+
+    private function getThumbnail(Individual $individual): ?string
+    {
+        foreach ($individual->facts(['OBJE']) as $fact) {
+            $media = $fact->target();
+            if ($media !== null && $media->canShow()) {
+                foreach ($media->mediaFiles() as $media_file) {
+                    return $media_file->imageUrl(100, 100, 'crop');
+                }
+            }
         }
 
         return null;

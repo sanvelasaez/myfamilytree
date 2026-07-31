@@ -63,10 +63,10 @@ use ImprovedTree\ImprovedTreeModule;
     </div>
 
     <div class="row mb-3">
-        <label class="col-sm-3 col-form-label" for="default_consanguinity_degree"><?= I18N::translate('Default consanguinity degree') ?></label>
+        <label class="col-sm-3 col-form-label" for="default_link_level"><?= I18N::translate('Default kinship level') ?></label>
         <div class="col-sm-9">
-            <?= view('components/select', ['name' => 'default_consanguinity_degree', 'id' => 'default_consanguinity_degree', 'selected' => $preferences['default_consanguinity_degree'], 'options' => [0 => I18N::translate('Off (use levels)')] + array_combine(range(1, 8), array_map(static fn(int $d): string => I18N::translate('Degree %s', $d), range(1, 8)))]) ?>
-            <div class="form-text text-muted"><?= I18N::translate('When set, the tree shows all relatives within this civil-law degree, replacing the ancestor/descendant levels.') ?></div>
+            <?= view('components/select', ['name' => 'default_link_level', 'id' => 'default_link_level', 'selected' => $preferences['default_link_level'], 'options' => [0 => I18N::translate('Off (use depths)')] + array_combine(range(1, 8), array_map(static fn(int $d): string => I18N::translate('Level %s', $d), range(1, 8)))]) ?>
+            <div class="form-text text-muted"><?= I18N::translate('When set, the tree shows everyone within this many kinship links, replacing the ancestor/descendant depths. Spouse links are free, so a couple always appears together.') ?></div>
         </div>
     </div>
 
