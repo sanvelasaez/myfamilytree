@@ -4,14 +4,22 @@ declare(strict_types=1);
 
 namespace ImprovedTree;
 
+use Fisharebest\Webtrees\Family;
+use Fisharebest\Webtrees\Http\RequestHandlers\AddNewFact;
+use Fisharebest\Webtrees\Http\RequestHandlers\AddSpouseToFamilyPage;
+use Fisharebest\Webtrees\I18N;
 use Fisharebest\Webtrees\Individual;
+
+use function route;
 
 class GraphBuilder
 {
     private array $nodes = [];
     private array $edges = [];
+    private array $families = [];
     private array $visited = [];
     private int $nodeCount = 0;
+    private int $phantomCount = 0;
     private int $limit = 500;
     private bool $truncated = false;
     private string $rootXref = '';
@@ -182,15 +190,129 @@ class GraphBuilder
             }
         }
 
+        $this->buildFamilies($ref);
+
         return $this->getResult();
+    }
+
+    /**
+     * Group materialised individuals into the couples/nuclear families that the
+     * renderer draws as a single "junction": descendants visibly branch out of
+     * the union between the two parents, not from each parent separately.
+     *
+     * A family is recorded when it has at least one visible child. When only one
+     * of the two parents is known (or visible), a phantom spouse node is
+     * synthesised so the child still hangs from a couple — and, if the viewer may
+     * edit, that card offers to create the missing spouse.
+     *
+     * @param array<string, Individual> $ref
+     */
+    private function buildFamilies(array $ref): void
+    {
+        $seen = [];
+
+        foreach (array_keys($this->nodes) as $xref) {
+            if (!isset($ref[$xref])) {
+                continue; // phantom nodes have no source individual
+            }
+
+            foreach ($ref[$xref]->spouseFamilies() as $family) {
+                $fxref = $family->xref();
+                if (isset($seen[$fxref])) {
+                    continue;
+                }
+                $seen[$fxref] = true;
+
+                $children = [];
+                foreach ($family->children() as $child) {
+                    if (isset($this->nodes[$child->xref()])) {
+                        $children[] = $child->xref();
+                    }
+                }
+                if ($children === []) {
+                    continue;
+                }
+
+                $parents = [];
+                foreach ($family->spouses() as $spouse) {
+                    if (isset($this->nodes[$spouse->xref()])) {
+                        $parents[] = $spouse->xref();
+                    }
+                }
+                if ($parents === []) {
+                    continue; // both parents hidden: children float without a junction
+                }
+
+                // Single known parent → synthesise the missing spouse so the
+                // descent still reads as coming from a couple.
+                if (count($parents) === 1) {
+                    $phantom = $this->addPhantomSpouse($this->nodes[$parents[0]], $family);
+                    if ($phantom !== null) {
+                        $parents[] = $phantom;
+                    }
+                }
+
+                $this->families[] = [
+                    'id'       => $fxref,
+                    'parents'  => $parents,
+                    'children' => $children,
+                ];
+            }
+        }
+    }
+
+    /**
+     * Create a placeholder card for an unknown spouse of a single-parent family,
+     * sitting on the known parent's row. Returns its synthetic id, or null when
+     * the node limit is reached.
+     *
+     * @param array<string, mixed> $known the known parent's node
+     */
+    private function addPhantomSpouse(array $known, Family $family): ?string
+    {
+        if ($this->nodeCount >= $this->limit) {
+            return null;
+        }
+
+        $id  = '__phantom-' . $family->xref() . '-' . $this->phantomCount++;
+        $sex = $known['sex'] === 'M' ? 'F' : ($known['sex'] === 'F' ? 'M' : 'U');
+
+        $create_url = null;
+        if ($family->canEdit()) {
+            $create_url = route(AddSpouseToFamilyPage::class, [
+                'tree' => $family->tree()->name(),
+                'xref' => $family->xref(),
+            ]);
+        }
+
+        $this->nodes[$id] = [
+            'id'         => $id,
+            'type'       => 'phantom',
+            'label'      => I18N::translate('Unknown'),
+            'url'        => null,
+            'sex'        => $sex,
+            'lifespan'   => null,
+            'generation' => $known['generation'],
+            'thumbnail'  => null,
+            'isRoot'     => false,
+            'isImplex'   => false,
+            'limited'    => false,
+            'phantom'    => true,
+            'createUrl'  => $create_url,
+        ];
+        $this->nodeCount++;
+
+        return $id;
     }
 
     private function reset(Individual $root, int $limit, bool $show_photos, bool $show_dates): void
     {
         $this->nodes      = [];
         $this->edges      = [];
+        $this->families   = [];
         $this->visited    = [];
         $this->nodeCount  = 0;
+        $this->phantomCount = 0;
         $this->limit      = max($limit, 1);
         $this->truncated  = false;
         $this->rootXref   = $root->xref();
@@ -254,6 +376,13 @@ class GraphBuilder
             'isRoot' => $xref === $this->rootXref,
             'isImplex' => false,
             'limited' => !$can_show && $can_show_name,
+            'addMediaUrl' => $can_show && $individual->canEdit()
+                ? route(AddNewFact::class, [
+                    'tree' => $individual->tree()->name(),
+                    'xref' => $xref,
+                    'fact' => 'OBJE',
+                ])
+                : null,
         ];
         $this->nodeCount++;
 
@@ -409,6 +538,7 @@ class GraphBuilder
             'layout' => 'vertical',
             'nodes' => array_values($this->nodes),
             'edges' => array_values($this->edges),
+            'families' => $this->families,
             'meta' => [
                 'truncated' => $this->truncated,
                 'limit' => $this->limit,

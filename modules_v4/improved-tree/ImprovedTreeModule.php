@@ -56,7 +56,7 @@ final class ImprovedTreeModule extends AbstractModule implements
 
     public const CUSTOM_TITLE = 'Improved Tree';
     public const CUSTOM_AUTHOR = 'sanvelas';
-    public const CUSTOM_VERSION = '1.2.0';
+    public const CUSTOM_VERSION = '1.4.0';
 
     // Allowed values / ranges for admin preferences.
     private const ALLOWED_MODES = ['vertical'];
@@ -184,6 +184,12 @@ final class ImprovedTreeModule extends AbstractModule implements
                 'Parents'                         => 'Padres',
                 'Spouses'                         => 'Cónyuges',
                 'Children'                        => 'Hijos',
+                'Direct family'                   => 'Familia directa',
+                'Legend'                          => 'Leyenda',
+                'Main person'                     => 'Persona principal',
+                'Filiation'                       => 'Filiación',
+                'Couple'                          => 'Pareja',
+                'Create individual'               => 'Crear individuo',
                 'Photos'                          => 'Fotos',
                 'Options'                         => 'Opciones',
                 'Refresh'                         => 'Actualizar',
@@ -194,6 +200,8 @@ final class ImprovedTreeModule extends AbstractModule implements
                 'Copy link'                       => 'Copiar enlace',
                 'Zoom in'                         => 'Acercar',
                 'Zoom out'                        => 'Alejar',
+                'Fullscreen'                      => 'Pantalla completa',
+                'Add image'                       => 'Añadir imagen',
                 'Download as PNG'                 => 'Descargar como PNG',
                 'Download as SVG'                 => 'Descargar como SVG',
                 'Print'                           => 'Imprimir',
