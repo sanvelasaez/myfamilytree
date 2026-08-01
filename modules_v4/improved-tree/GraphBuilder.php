@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace ImprovedTree;
 
 use Fisharebest\Webtrees\Family;
+use Fisharebest\Webtrees\Http\RequestHandlers\AddChildToIndividualPage;
 use Fisharebest\Webtrees\Http\RequestHandlers\AddNewFact;
+use Fisharebest\Webtrees\Http\RequestHandlers\AddParentToIndividualPage;
 use Fisharebest\Webtrees\Http\RequestHandlers\AddSpouseToFamilyPage;
+use Fisharebest\Webtrees\Http\RequestHandlers\AddSpouseToIndividualPage;
 use Fisharebest\Webtrees\I18N;
 use Fisharebest\Webtrees\Individual;
 
@@ -364,6 +367,33 @@ class GraphBuilder
             $thumbnail = $this->showPhotos ? $this->getThumbnail($individual) : null;
         }
 
+        // Add-relative shortcuts, surfaced as the "+" under each card. Only when
+        // the viewer may edit this person; phantom nodes are handled elsewhere.
+        $can_edit = $can_show && $individual->canEdit();
+        $tree_name = $individual->tree()->name();
+        $add = $can_edit
+            ? [
+                'father' => route(AddParentToIndividualPage::class, [
+                    'tree' => $tree_name,
+                    'xref' => $xref,
+                    'sex'  => 'M',
+                ]),
+                'mother' => route(AddParentToIndividualPage::class, [
+                    'tree' => $tree_name,
+                    'xref' => $xref,
+                    'sex'  => 'F',
+                ]),
+                'spouse' => route(AddSpouseToIndividualPage::class, [
+                    'tree' => $tree_name,
+                    'xref' => $xref,
+                ]),
+                'child' => route(AddChildToIndividualPage::class, [
+                    'tree' => $tree_name,
+                    'xref' => $xref,
+                ]),
+            ]
+            : null;
+
         $this->nodes[$xref] = [
             'id' => $xref,
             'type' => 'individual',
@@ -376,13 +406,14 @@ class GraphBuilder
             'isRoot' => $xref === $this->rootXref,
             'isImplex' => false,
             'limited' => !$can_show && $can_show_name,
-            'addMediaUrl' => $can_show && $individual->canEdit()
+            'addMediaUrl' => $can_edit
                 ? route(AddNewFact::class, [
-                    'tree' => $individual->tree()->name(),
+                    'tree' => $tree_name,
                     'xref' => $xref,
                     'fact' => 'OBJE',
                 ])
                 : null,
+            'add' => $add,
         ];
         $this->nodeCount++;
 
