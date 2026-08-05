@@ -56,7 +56,7 @@ final class ImprovedTreeModule extends AbstractModule implements
 
     public const CUSTOM_TITLE = 'Improved Tree';
     public const CUSTOM_AUTHOR = 'sanvelas';
-    public const CUSTOM_VERSION = '1.4.0';
+    public const CUSTOM_VERSION = '1.4.1';
 
     // Allowed values / ranges for admin preferences.
     private const ALLOWED_MODES = ['vertical'];

@@ -204,9 +204,14 @@ class GraphBuilder
      * the union between the two parents, not from each parent separately.
      *
      * A family is recorded when it has at least one visible child. When only one
-     * of the two parents is known (or visible), a phantom spouse node is
-     * synthesised so the child still hangs from a couple — and, if the viewer may
-     * edit, that card offers to create the missing spouse.
+     * of the two parents is materialised, a phantom "Unknown" spouse is
+     * synthesised — per family — so the child hangs from a couple and the card
+     * can offer to add the missing spouse. This holds even when the known parent
+     * already partners someone in another family: each union is a distinct
+     * marriage, and the layout draws it flanked (spouse — person — spouse) with
+     * its own bar and rings, so a child from a different union reads clearly as
+     * such (prompting the viewer to add the missing co-parent, or to spot a
+     * data-entry error).
      *
      * @param array<string, Individual> $ref
      */
@@ -246,8 +251,8 @@ class GraphBuilder
                     continue; // both parents hidden: children float without a junction
                 }
 
-                // Single known parent → synthesise the missing spouse so the
-                // descent still reads as coming from a couple.
+                // Single materialised parent → synthesise the missing spouse so
+                // the descent reads as a couple and the card offers to add one.
                 if (count($parents) === 1) {
                     $phantom = $this->addPhantomSpouse($this->nodes[$parents[0]], $family);
                     if ($phantom !== null) {
@@ -256,7 +261,7 @@ class GraphBuilder
                 }
 
                 $this->families[] = [
-                    'id'       => $fxref,
+                    'id'       => $family->xref(),
                     'parents'  => $parents,
                     'children' => $children,
                 ];
@@ -265,7 +270,7 @@ class GraphBuilder
     }
 
     /**
-     * Create a placeholder card for an unknown spouse of a single-parent family,
+     * Create a placeholder card for the unknown spouse of a single-parent family,
      * sitting on the known parent's row. Returns its synthetic id, or null when
      * the node limit is reached.
      *
