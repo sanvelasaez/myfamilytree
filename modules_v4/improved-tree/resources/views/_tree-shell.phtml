@@ -16,6 +16,10 @@ use Fisharebest\Webtrees\Individual;
  * @var string     $search_url
  * @var string     $tree_url
  * @var string     $back_url
+ * @var string     $edit_context_url
+ * @var string     $accept_url_template
+ * @var bool       $can_edit
+ * @var bool       $can_moderate
  * @var Individual $individual
  * @var int        $default_link_level
  * @var int        $default_ancestor_depth
@@ -33,7 +37,11 @@ use Fisharebest\Webtrees\Individual;
      data-search-url="<?= e($search_url) ?>"
      data-tree-url="<?= e($tree_url) ?>"
      data-root-xref="<?= e($individual->xref()) ?>"
-     data-back-url="<?= e($back_url) ?>">
+     data-back-url="<?= e($back_url) ?>"
+     data-edit-context-url="<?= e($edit_context_url) ?>"
+     data-accept-url-template="<?= e($accept_url_template) ?>"
+     data-can-edit="<?= $can_edit ? '1' : '' ?>"
+     data-can-moderate="<?= $can_moderate ? '1' : '' ?>">
 
     <header class="itree-fs__bar">
         <div class="itree-fs__brand">
@@ -71,6 +79,9 @@ use Fisharebest\Webtrees\Individual;
                 <span class="itree-legend__item"><i class="itree-legend__swatch itree-legend__swatch--root"></i><?= I18N::translate('Main person') ?></span>
                 <span class="itree-legend__item"><i class="itree-legend__line itree-legend__line--lineage"></i><?= I18N::translate('Filiation') ?></span>
                 <span class="itree-legend__item"><i class="itree-legend__line itree-legend__line--spouse"></i><?= I18N::translate('Couple') ?></span>
+                <?php if ($can_edit) : ?>
+                <span class="itree-legend__item"><i class="itree-legend__swatch itree-legend__swatch--pending"></i><?= I18N::translate('Pending changes') ?></span>
+                <?php endif ?>
             </div>
         </div>
 
@@ -155,6 +166,13 @@ use Fisharebest\Webtrees\Individual;
         <div class="itree-fs__zoom d-print-none">
             <button type="button" data-itree-zoom-in title="<?= e(I18N::translate('Zoom in')) ?>" aria-label="<?= e(I18N::translate('Zoom in')) ?>">+</button>
             <button type="button" data-itree-zoom-out title="<?= e(I18N::translate('Zoom out')) ?>" aria-label="<?= e(I18N::translate('Zoom out')) ?>">&minus;</button>
+            <button type="button" data-itree-center title="<?= e(I18N::translate('Center on the selected person')) ?>" aria-label="<?= e(I18N::translate('Center on the selected person')) ?>">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 10.5 12 3l9 7.5"></path>
+                    <path d="M5 9.5V21h14V9.5"></path>
+                    <path d="M9.5 21v-6h5v6"></path>
+                </svg>
+            </button>
             <button type="button" data-itree-fullscreen title="<?= e(I18N::translate('Fullscreen')) ?>" aria-label="<?= e(I18N::translate('Fullscreen')) ?>">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-itree-fullscreen-icon>
                     <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"></path>

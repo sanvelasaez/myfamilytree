@@ -4,16 +4,10 @@ declare(strict_types=1);
 
 namespace ImprovedTree;
 
+use Fisharebest\Webtrees\Auth;
 use Fisharebest\Webtrees\Family;
-use Fisharebest\Webtrees\Http\RequestHandlers\AddChildToIndividualPage;
-use Fisharebest\Webtrees\Http\RequestHandlers\AddNewFact;
-use Fisharebest\Webtrees\Http\RequestHandlers\AddParentToIndividualPage;
-use Fisharebest\Webtrees\Http\RequestHandlers\AddSpouseToFamilyPage;
-use Fisharebest\Webtrees\Http\RequestHandlers\AddSpouseToIndividualPage;
 use Fisharebest\Webtrees\I18N;
 use Fisharebest\Webtrees\Individual;
-
-use function route;
 
 class GraphBuilder
 {
@@ -28,6 +22,19 @@ class GraphBuilder
     private string $rootXref = '';
     private bool $showPhotos = true;
     private bool $showDates = true;
+
+    /** @var array<string, string> xref => 'new'|'changed' (records with pending edits) */
+    private array $pending = [];
+
+    /**
+     * Records with unapproved changes, so cards can wear a "pending" badge.
+     *
+     * @param array<string, string> $pending xref => 'new'|'changed'
+     */
+    public function setPending(array $pending): void
+    {
+        $this->pending = $pending;
+    }
 
     public function buildGraph(
         Individual $root,
@@ -177,7 +184,7 @@ class GraphBuilder
             foreach ($ind->childFamilies() as $family) {
                 foreach ($family->spouses() as $parent) {
                     if (isset($this->nodes[$parent->xref()])) {
-                        $this->addEdge($xref, $parent->xref(), 'CHILD');
+                        $this->addEdge($xref, $parent->xref(), 'CHILD', $family->xref());
                     }
                 }
             }
@@ -186,7 +193,7 @@ class GraphBuilder
                 foreach ($ind->spouseFamilies() as $family) {
                     foreach ($family->spouses() as $spouse) {
                         if ($spouse->xref() !== $xref && isset($this->nodes[$spouse->xref()])) {
-                            $this->addEdge($xref, $spouse->xref(), 'SPOUSE');
+                            $this->addEdge($xref, $spouse->xref(), 'SPOUSE', $family->xref());
                         }
                     }
                 }
@@ -237,9 +244,6 @@ class GraphBuilder
                         $children[] = $child->xref();
                     }
                 }
-                if ($children === []) {
-                    continue;
-                }
 
                 $parents = [];
                 foreach ($family->spouses() as $spouse) {
@@ -253,17 +257,28 @@ class GraphBuilder
 
                 // Single materialised parent → synthesise the missing spouse so
                 // the descent reads as a couple and the card offers to add one.
-                if (count($parents) === 1) {
+                // Only when there are children: childless half-couples add noise.
+                if ($children !== [] && count($parents) === 1) {
                     $phantom = $this->addPhantomSpouse($this->nodes[$parents[0]], $family);
                     if ($phantom !== null) {
                         $parents[] = $phantom;
                     }
                 }
 
+                // Childless couples are emitted too (the renderer skips them for
+                // layout junctions) so the editing UI knows every union's famId
+                // and which HUSB/WIFE slot is genuinely empty in the records.
                 $this->families[] = [
-                    'id'       => $family->xref(),
-                    'parents'  => $parents,
-                    'children' => $children,
+                    'id'          => $family->xref(),
+                    'parents'     => $parents,
+                    'children'    => $children,
+                    // children[] only lists MATERIALISED nodes; hasChildren is
+                    // the record truth, so the edit UI never offers to delete
+                    // a union whose children just fell outside the clipping.
+                    'hasChildren' => $family->children()->isNotEmpty(),
+                    'husb'        => $family->husband()?->xref(),
+                    'wife'        => $family->wife()?->xref(),
+                    'pending'     => $this->pending[$family->xref()] ?? null,
                 ];
             }
         }
@@ -285,14 +300,6 @@ class GraphBuilder
         $id  = '__phantom-' . $family->xref() . '-' . $this->phantomCount++;
         $sex = $known['sex'] === 'M' ? 'F' : ($known['sex'] === 'F' ? 'M' : 'U');
 
-        $create_url = null;
-        if ($family->canEdit()) {
-            $create_url = route(AddSpouseToFamilyPage::class, [
-                'tree' => $family->tree()->name(),
-                'xref' => $family->xref(),
-            ]);
-        }
-
         $this->nodes[$id] = [
             'id'         => $id,
             'type'       => 'phantom',
@@ -306,7 +313,12 @@ class GraphBuilder
             'isImplex'   => false,
             'limited'    => false,
             'phantom'    => true,
-            'createUrl'  => $create_url,
+            // The client completes the family through its own popup; only the
+            // capability travels in the JSON, never a page URL.
+            'canComplete' => $family->canEdit(),
+            'famId'      => $family->xref(),
+            'canEdit'    => $family->canEdit(),
+            'pending'    => null,
         ];
         $this->nodeCount++;
 
@@ -372,32 +384,13 @@ class GraphBuilder
             $thumbnail = $this->showPhotos ? $this->getThumbnail($individual) : null;
         }
 
-        // Add-relative shortcuts, surfaced as the "+" under each card. Only when
-        // the viewer may edit this person; phantom nodes are handled elsewhere.
+        // Edit capabilities, surfaced as the "+" and camera controls on each
+        // card. Bare flags: the client's popups resolve their own endpoints
+        // through the EditContext, so no page URL travels in the graph JSON.
         $can_edit = $can_show && $individual->canEdit();
-        $tree_name = $individual->tree()->name();
-        $add = $can_edit
-            ? [
-                'father' => route(AddParentToIndividualPage::class, [
-                    'tree' => $tree_name,
-                    'xref' => $xref,
-                    'sex'  => 'M',
-                ]),
-                'mother' => route(AddParentToIndividualPage::class, [
-                    'tree' => $tree_name,
-                    'xref' => $xref,
-                    'sex'  => 'F',
-                ]),
-                'spouse' => route(AddSpouseToIndividualPage::class, [
-                    'tree' => $tree_name,
-                    'xref' => $xref,
-                ]),
-                'child' => route(AddChildToIndividualPage::class, [
-                    'tree' => $tree_name,
-                    'xref' => $xref,
-                ]),
-            ]
-            : null;
+        // Media uploads have their own gate (tree preference MEDIA_UPLOAD);
+        // mirror the core UI, which hides "add media" when it is not met.
+        $can_add_media = $can_edit && Auth::canUploadMedia($individual->tree(), Auth::user());
 
         $this->nodes[$xref] = [
             'id' => $xref,
@@ -411,14 +404,10 @@ class GraphBuilder
             'isRoot' => $xref === $this->rootXref,
             'isImplex' => false,
             'limited' => !$can_show && $can_show_name,
-            'addMediaUrl' => $can_edit
-                ? route(AddNewFact::class, [
-                    'tree' => $tree_name,
-                    'xref' => $xref,
-                    'fact' => 'OBJE',
-                ])
-                : null,
-            'add' => $add,
+            'canAddMedia' => $can_add_media,
+            'add' => $can_edit ? true : null,
+            'canEdit' => $can_edit,
+            'pending' => $this->pending[$xref] ?? null,
         ];
         $this->nodeCount++;
 
@@ -439,7 +428,7 @@ class GraphBuilder
                     return;
                 }
 
-                $this->addEdge($root->xref(), $sibling->xref(), 'SIBLING');
+                $this->addEdge($root->xref(), $sibling->xref(), 'SIBLING', $family->xref());
             }
         }
     }
@@ -461,7 +450,7 @@ class GraphBuilder
                         return $next;
                     }
 
-                    $this->addEdge($individual->xref(), $parent->xref(), 'CHILD');
+                    $this->addEdge($individual->xref(), $parent->xref(), 'CHILD', $family->xref());
 
                     if ($status === 'new') {
                         $next[] = $parent;
@@ -496,7 +485,7 @@ class GraphBuilder
                             return $next;
                         }
 
-                        $this->addEdge($individual->xref(), $spouse->xref(), 'SPOUSE');
+                        $this->addEdge($individual->xref(), $spouse->xref(), 'SPOUSE', $family->xref());
                     }
                 }
 
@@ -507,7 +496,7 @@ class GraphBuilder
                         return $next;
                     }
 
-                    $this->addEdge($individual->xref(), $child->xref(), 'PARENT');
+                    $this->addEdge($individual->xref(), $child->xref(), 'PARENT', $family->xref());
 
                     if ($status === 'new') {
                         $next[] = $child;
@@ -519,13 +508,17 @@ class GraphBuilder
         return $next;
     }
 
-    private function addEdge(string $from, string $to, string $kind): void
+    private function addEdge(string $from, string $to, string $kind, ?string $famId = null): void
     {
-        $edge_id = $from . '-' . $to . '-' . $kind;
+        // A couple can hold several FAM records (divorce + remarriage): the
+        // famId is part of a SPOUSE edge's identity, so each union gets its
+        // own clickable bar instead of the first family swallowing the rest.
+        $suffix  = $kind === 'SPOUSE' && $famId !== null ? '-' . $famId : '';
+        $edge_id = $from . '-' . $to . '-' . $kind . $suffix;
 
         // For undirected relationships, avoid adding both directions as separate edges.
         if ($kind === 'SPOUSE' || $kind === 'SIBLING') {
-            $reverse_id = $to . '-' . $from . '-' . $kind;
+            $reverse_id = $to . '-' . $from . '-' . $kind . $suffix;
             if (isset($this->edges[$reverse_id])) {
                 return;
             }
@@ -537,6 +530,7 @@ class GraphBuilder
                 'from' => $from,
                 'to' => $to,
                 'kind' => $kind,
+                'famId' => $famId,
             ];
         }
     }

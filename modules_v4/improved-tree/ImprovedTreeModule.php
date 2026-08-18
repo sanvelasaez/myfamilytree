@@ -5,10 +5,25 @@ declare(strict_types=1);
 namespace ImprovedTree;
 
 use Fisharebest\Webtrees\Auth;
+use Fisharebest\Webtrees\DB;
+use Fisharebest\Webtrees\Family;
 use Fisharebest\Webtrees\FlashMessages;
 use Fisharebest\Webtrees\Fact;
-use Fisharebest\Webtrees\Http\RequestHandlers\AddNewFact;
-use Fisharebest\Webtrees\Http\RequestHandlers\EditFactPage;
+use Fisharebest\Webtrees\GedcomRecord;
+use Fisharebest\Webtrees\Http\RequestHandlers\AddChildToFamilyAction;
+use Fisharebest\Webtrees\Http\RequestHandlers\AddChildToIndividualAction;
+use Fisharebest\Webtrees\Http\RequestHandlers\AddParentToIndividualAction;
+use Fisharebest\Webtrees\Http\RequestHandlers\AddSpouseToFamilyAction;
+use Fisharebest\Webtrees\Http\RequestHandlers\AddSpouseToIndividualAction;
+use Fisharebest\Webtrees\Http\RequestHandlers\ChangeFamilyMembersAction;
+use Fisharebest\Webtrees\Http\RequestHandlers\CreateMediaObjectAction;
+use Fisharebest\Webtrees\Http\RequestHandlers\DeleteFact;
+use Fisharebest\Webtrees\Http\RequestHandlers\DeleteRecord;
+use Fisharebest\Webtrees\Http\RequestHandlers\EditFactAction;
+use Fisharebest\Webtrees\Http\RequestHandlers\LinkChildToFamilyAction;
+use Fisharebest\Webtrees\Http\RequestHandlers\LinkSpouseToIndividualAction;
+use Fisharebest\Webtrees\Http\RequestHandlers\PendingChangesAcceptRecord;
+use Fisharebest\Webtrees\Http\RequestHandlers\TomSelectIndividual;
 use Fisharebest\Webtrees\Individual;
 use Fisharebest\Webtrees\I18N;
 use Fisharebest\Webtrees\Module\AbstractModule;
@@ -27,6 +42,7 @@ use Fisharebest\Webtrees\Module\ModuleMenuTrait;
 use Fisharebest\Webtrees\Menu;
 use Fisharebest\Webtrees\Registry;
 use Fisharebest\Webtrees\Services\SearchService;
+use Fisharebest\Webtrees\Session;
 use Fisharebest\Webtrees\Tree;
 use Fisharebest\Webtrees\Validator;
 use Fisharebest\Webtrees\View;
@@ -56,7 +72,7 @@ final class ImprovedTreeModule extends AbstractModule implements
 
     public const CUSTOM_TITLE = 'Improved Tree';
     public const CUSTOM_AUTHOR = 'sanvelas';
-    public const CUSTOM_VERSION = '1.4.1';
+    public const CUSTOM_VERSION = '1.5.3';
 
     // Allowed values / ranges for admin preferences.
     private const ALLOWED_MODES = ['vertical'];
@@ -172,6 +188,25 @@ final class ImprovedTreeModule extends AbstractModule implements
         if (str_starts_with($language, 'es')) {
             return [
                 'Interactive tree'                => 'Árbol interactivo',
+                'Improved tree of %s'             => 'Árbol interactivo de %s',
+                'Collapse'                        => 'Contraer',
+                'The tree was truncated because it reached the node limit for your role.'
+                                                  => 'El árbol se ha truncado al alcanzar el límite de nodos de tu rol.',
+                'Defaults'                        => 'Valores por defecto',
+                'Default ancestor depth'          => 'Profundidad de ascendientes por defecto',
+                'Default descendant depth'        => 'Profundidad de descendientes por defecto',
+                'Include spouses by default'      => 'Incluir cónyuges por defecto',
+                'Include siblings by default'     => 'Incluir hermanos por defecto',
+                'Show photos by default'          => 'Mostrar fotos por defecto',
+                'Show dates by default'           => 'Mostrar fechas por defecto',
+                'Node limits'                     => 'Límites de nodos',
+                'The maximum number of individuals rendered in a single tree, by role. Requests for more are truncated.'
+                                                  => 'Número máximo de individuos dibujados en un árbol, por rol. Las peticiones que lo superen se truncan.',
+                'Maximum nodes for visitors'      => 'Máximo de nodos para visitantes',
+                'Maximum nodes for logged-in users'
+                                                  => 'Máximo de nodos para usuarios registrados',
+                'Maximum nodes for administrators'
+                                                  => 'Máximo de nodos para administradores',
                 'Kinship level'                   => 'Nivel de parentesco',
                 'Default kinship level'           => 'Nivel de parentesco por defecto',
                 'When set, the tree shows everyone within this many kinship links, replacing the ancestor/descendant depths. Spouse links are free, so a couple always appears together.'
@@ -200,6 +235,7 @@ final class ImprovedTreeModule extends AbstractModule implements
                 'Copy link'                       => 'Copiar enlace',
                 'Zoom in'                         => 'Acercar',
                 'Zoom out'                        => 'Alejar',
+                'Center on the selected person'   => 'Centrar en la persona seleccionada',
                 'Fullscreen'                      => 'Pantalla completa',
                 'Add image'                       => 'Añadir imagen',
                 'Download as PNG'                 => 'Descargar como PNG',
@@ -400,7 +436,63 @@ final class ImprovedTreeModule extends AbstractModule implements
                 'tree'    => $tree->name(),
                 'xref'    => $individual->xref(),
             ]),
+            'edit_context_url' => route('module', [
+                'module' => $this->name(),
+                'action' => 'EditContext',
+                'tree'   => $tree->name(),
+            ]),
+            // The record with pending changes is only known at settle time (it
+            // may even be a FAM), so the client fills in the xref itself.
+            'accept_url_template' => route(PendingChangesAcceptRecord::class, [
+                'tree' => $tree->name(),
+                'xref' => 'XREFPLACEHOLDER',
+            ]),
+            'can_edit'     => Auth::isEditor($tree),
+            'can_moderate' => Auth::isModerator($tree),
         ];
+    }
+
+    /**
+     * A stamp that moves whenever ANY edit — pending or accepted, from this
+     * module, better-webtrees-forms or the native UI — touches the tree. Baked
+     * into cache keys it invalidates every cached combination at once;
+     * superseded entries just age out with their TTL. The pending count is
+     * needed because accepting/rejecting a change only UPDATEs its status
+     * column, which MAX(change_id) alone would miss.
+     */
+    private function treeChangeStamp(Tree $tree): string
+    {
+        $row = DB::table('change')
+            ->where('gedcom_id', '=', $tree->id())
+            ->selectRaw("MAX(change_id) AS max_id, SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending")
+            ->first();
+
+        return ($row->max_id ?? 0) . '.' . ($row->pending ?? 0);
+    }
+
+    /**
+     * Records with unapproved changes, keyed by xref: 'new' when the record
+     * itself is a pending addition, 'changed' otherwise. Only meaningful for
+     * viewers who see pending edits merged in (editors and up).
+     *
+     * @return array<string, string>
+     */
+    private function pendingXrefs(Tree $tree): array
+    {
+        $rows = DB::table('change')
+            ->where('gedcom_id', '=', $tree->id())
+            ->where('status', '=', 'pending')
+            ->orderBy('change_id')
+            ->get(['xref', 'old_gedcom']);
+
+        $pending = [];
+        foreach ($rows as $row) {
+            if (!isset($pending[$row->xref])) {
+                $pending[$row->xref] = trim((string) $row->old_gedcom) === '' ? 'new' : 'changed';
+            }
+        }
+
+        return $pending;
     }
 
     public function getGraphAction(ServerRequestInterface $request): ResponseInterface
@@ -415,6 +507,10 @@ final class ImprovedTreeModule extends AbstractModule implements
         $individual = Registry::individualFactory()->make($xref, $tree);
         $individual = Auth::checkIndividualAccess($individual, false, true);
 
+        // Read-only endpoint: release the session write-lock so parallel AJAX
+        // (panel detail, edit forms) is not serialised behind graph builds.
+        Session::save();
+
         $mode                  = Validator::queryParams($request)->string('mode', $this->preference('default_mode'));
         $ancestor_depth        = Validator::queryParams($request)->isBetween(self::MIN_DEPTH, self::MAX_DEPTH)->integer('ancestor_depth', (int) $this->preference('default_ancestor_depth'));
         $descendant_depth      = Validator::queryParams($request)->isBetween(self::MIN_DEPTH, self::MAX_DEPTH)->integer('descendant_depth', (int) $this->preference('default_descendant_depth'));
@@ -426,9 +522,15 @@ final class ImprovedTreeModule extends AbstractModule implements
         $requested_limit       = Validator::queryParams($request)->integer('limit', $this->maxNodesForUser($user));
         $limit                 = min($requested_limit, $this->maxNodesForUser($user));
 
+        // Editors see their own pending edits merged into the records, so their
+        // cache entries are per-user; the pending map drives the cards' badges.
+        $is_editor = Auth::isEditor($tree, $user);
+        $pending   = $is_editor ? $this->pendingXrefs($tree) : [];
+
         // Cache the built graph. The key covers everything that changes the output,
         // including the viewer's access level (privacy is applied while building),
         // so entries are safely shared between users at the same access level.
+        // The change stamp retires every entry the moment the tree is edited.
         $cache_key = implode('|', [
             'improved-tree-graph',
             self::CUSTOM_VERSION,
@@ -444,6 +546,8 @@ final class ImprovedTreeModule extends AbstractModule implements
             (int) $show_dates,
             $limit,
             Auth::accessLevel($tree, $user),
+            $is_editor ? (string) Auth::id() : '',
+            $this->treeChangeStamp($tree),
         ]);
 
         $graph = Registry::cache()->file()->remember(
@@ -457,9 +561,11 @@ final class ImprovedTreeModule extends AbstractModule implements
                 $link_level,
                 $show_photos,
                 $show_dates,
-                $limit
+                $limit,
+                $pending
             ): array {
                 $builder = new GraphBuilder();
+                $builder->setPending($pending);
 
                 if ($link_level > 0) {
                     return $builder->buildGraphByLinks(
@@ -486,10 +592,11 @@ final class ImprovedTreeModule extends AbstractModule implements
             self::GRAPH_CACHE_TTL
         );
 
-        // Let the browser reuse the JSON across navigations too (private: never on
-        // a shared proxy, since the payload is privacy-filtered per access level).
+        // no-cache (not max-age): the browser must revalidate after every edit;
+        // the server-side file cache absorbs the rebuild cost. private: the
+        // payload is privacy-filtered per access level, never for shared proxies.
         return response($graph)
-            ->withHeader('Cache-Control', 'private, max-age=' . self::GRAPH_CACHE_TTL);
+            ->withHeader('Cache-Control', 'private, no-cache');
     }
 
     /**
@@ -509,12 +616,17 @@ final class ImprovedTreeModule extends AbstractModule implements
         $individual = Registry::individualFactory()->make($xref, $tree);
         $individual = Auth::checkIndividualAccess($individual, false, true);
 
+        // Read-only: free the session lock (see getGraphAction).
+        Session::save();
+
         $cache_key = implode('|', [
             'improved-tree-detail',
             self::CUSTOM_VERSION,
             $tree->id(),
             $individual->xref(),
             Auth::accessLevel($tree, $user),
+            Auth::isEditor($tree, $user) ? (string) Auth::id() : '',
+            $this->treeChangeStamp($tree),
         ]);
 
         $detail = Registry::cache()->file()->remember(
@@ -524,7 +636,166 @@ final class ImprovedTreeModule extends AbstractModule implements
         );
 
         return response($detail)
-            ->withHeader('Cache-Control', 'private, max-age=' . self::GRAPH_CACHE_TTL);
+            ->withHeader('Cache-Control', 'private, no-cache');
+    }
+
+    /**
+     * Everything the client-side editor needs to act on one individual: the
+     * family structure with its genuinely empty HUSB/WIFE slots, and ready-made
+     * URLs for every applicable core edit endpoint (URLs are always generated
+     * server-side; the client never assembles one). Cached like the graph — the
+     * change stamp refreshes it after every edit, which also keeps the embedded
+     * fact ids (md5 of each fact's GEDCOM) valid.
+     */
+    public function getEditContextAction(ServerRequestInterface $request): ResponseInterface
+    {
+        $tree = Validator::attributes($request)->tree();
+        $user = Validator::attributes($request)->user();
+        $xref = Validator::queryParams($request)->isXref()->string('xref');
+
+        Auth::checkComponentAccess($this, ModuleChartInterface::class, $tree, $user);
+
+        $individual = Registry::individualFactory()->make($xref, $tree);
+        $individual = Auth::checkIndividualAccess($individual, false, true);
+
+        if (!$individual->canEdit()) {
+            return response(['canEdit' => false], 403);
+        }
+
+        $cache_key = implode('|', [
+            'improved-tree-editctx',
+            self::CUSTOM_VERSION,
+            $tree->id(),
+            $individual->xref(),
+            (string) Auth::id(),
+            $this->treeChangeStamp($tree),
+        ]);
+
+        $context = Registry::cache()->file()->remember(
+            $cache_key,
+            fn (): array => $this->buildEditContext($individual),
+            self::GRAPH_CACHE_TTL
+        );
+
+        return response($context)
+            ->withHeader('Cache-Control', 'private, no-cache');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildEditContext(Individual $individual): array
+    {
+        $tree      = $individual->tree();
+        $tree_name = $tree->name();
+        $xref      = $individual->xref();
+
+        $famc = [];
+        foreach ($individual->childFamilies() as $family) {
+            $famc[] = $this->familyEditContext($family);
+        }
+
+        $fams = [];
+        foreach ($individual->spouseFamilies() as $family) {
+            $fams[] = $this->familyEditContext($family);
+        }
+
+        $primary = $individual->getAllNames()[$individual->getPrimaryName()] ?? [];
+
+        return [
+            'xref'        => $xref,
+            'canEdit'     => true,
+            'canModerate' => Auth::isModerator($tree),
+            'sex'         => $individual->sex(),
+            'names'       => [
+                'given'   => trim(str_replace('@N.N.', '', $primary['givn'] ?? '')),
+                'surname' => trim(str_replace('@N.N.', '', $primary['surn'] ?? '')),
+            ],
+            'famc'        => $famc,
+            'fams'        => $fams,
+            'actions'     => [
+                'addChildToIndividual'  => route(AddChildToIndividualAction::class, ['tree' => $tree_name, 'xref' => $xref]),
+                'addSpouseToIndividual' => route(AddSpouseToIndividualAction::class, ['tree' => $tree_name, 'xref' => $xref]),
+                'addParent'             => route(AddParentToIndividualAction::class, ['tree' => $tree_name, 'xref' => $xref]),
+                'linkSpouse'            => route(LinkSpouseToIndividualAction::class, ['tree' => $tree_name, 'xref' => $xref]),
+                // The chosen person's xref replaces the placeholder client-side
+                // (alphanumeric on purpose: it survives URL-encoding intact).
+                'linkChildTemplate'     => route(LinkChildToFamilyAction::class, ['tree' => $tree_name, 'xref' => 'XREFPLACEHOLDER']),
+                'changeFamilyMembers'   => route(ChangeFamilyMembersAction::class, ['tree' => $tree_name]),
+                'delete'                => route(DeleteRecord::class, ['tree' => $tree_name, 'xref' => $xref]),
+                'accept'                => route(PendingChangesAcceptRecord::class, ['tree' => $tree_name, 'xref' => $xref]),
+                'newFactUrl'            => $this->factUpdateUrl($individual, 'new'),
+                // JSON endpoint: creates (and auto-accepts) the media object;
+                // the client then links it with a new OBJE fact. Gated by the
+                // tree's MEDIA_UPLOAD preference (the core endpoint itself only
+                // checks AuthEditor); the client shows mediaUnavailable on null.
+                'createMedia'           => Auth::canUploadMedia($tree, Auth::user())
+                    ? route(CreateMediaObjectAction::class, ['tree' => $tree_name])
+                    : null,
+                'search'                => route(TomSelectIndividual::class, ['tree' => $tree_name, 'at' => '']),
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function familyEditContext(Family $family): array
+    {
+        $tree_name = $family->tree()->name();
+        $fxref     = $family->xref();
+        $husband   = $family->husband();
+        $wife      = $family->wife();
+        $can_edit  = $family->canEdit();
+        // Skip pending deletions, like visibleFacts() does for individuals:
+        // otherwise an in-flight MARR edit would serve the superseded fact.
+        $marr      = $family->facts(['MARR'], true)
+            ->filter(static fn (Fact $fact): bool => !$fact->isPendingDeletion())
+            ->first();
+
+        $children = [];
+        foreach ($family->children() as $child) {
+            $children[] = $this->personStub($child);
+        }
+
+        return [
+            'famId'      => $fxref,
+            'husb'       => $husband instanceof Individual ? $this->personStub($husband) : null,
+            'wife'       => $wife instanceof Individual ? $this->personStub($wife) : null,
+            'children'   => $children,
+            'marr'       => $marr instanceof Fact ? $this->factEditData($family, $marr) : null,
+            'newFactUrl' => $can_edit ? $this->factUpdateUrl($family, 'new') : null,
+            'pending'    => $family->isPendingAddition(),
+            'actions'    => $can_edit
+                ? [
+                    'addChild'  => route(AddChildToFamilyAction::class, ['tree' => $tree_name, 'xref' => $fxref]),
+                    // Only offered while a HUSB/WIFE slot is genuinely empty:
+                    // the core endpoint fails silently on a complete family.
+                    'addSpouse' => $husband === null || $wife === null
+                        ? route(AddSpouseToFamilyAction::class, ['tree' => $tree_name, 'xref' => $fxref])
+                        : null,
+                    // Deletes the FAM record itself (the core cleans FAMS/FAMC
+                    // pointers); the client only offers it on childless unions.
+                    // Gated on the RAW gedcom, not children(): a child hidden
+                    // by privacy must still block the delete, or DeleteRecord
+                    // would silently strip that child's FAMC.
+                    'delete'    => preg_match('/\n1 CHIL @/', $family->gedcom()) === 1
+                        ? null
+                        : route(DeleteRecord::class, ['tree' => $tree_name, 'xref' => $fxref]),
+                ]
+                : null,
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function personStub(Individual $individual): array
+    {
+        return [
+            'xref'  => $individual->xref(),
+            'label' => $individual->canShowName() ? strip_tags($individual->fullName()) : '?',
+        ];
     }
 
     /**
@@ -539,6 +810,9 @@ final class ImprovedTreeModule extends AbstractModule implements
         $user = Validator::attributes($request)->user();
 
         Auth::checkComponentAccess($this, ModuleChartInterface::class, $tree, $user);
+
+        // Read-only: free the session lock (see getGraphAction).
+        Session::save();
 
         $q = trim(Validator::queryParams($request)->string('q', ''));
 
@@ -585,7 +859,6 @@ final class ImprovedTreeModule extends AbstractModule implements
                 'name'   => '?',
                 'sex'    => $individual->sex(),
                 'canShow' => false,
-                'facts'  => [],
                 'groups' => [],
             ];
         }
@@ -598,7 +871,6 @@ final class ImprovedTreeModule extends AbstractModule implements
             'url'       => $individual->url(),
             'thumbnail' => $this->portrait($individual),
             'canShow'   => $can_show,
-            'facts'     => [],
             'groups'    => [],
         ];
 
@@ -609,23 +881,110 @@ final class ImprovedTreeModule extends AbstractModule implements
         $can_edit = $individual->canEdit();
 
         $detail['canEdit']    = $can_edit;
-        $detail['facts']      = $this->buildFacts($individual, $can_edit);
         $detail['timeline']   = $this->buildTimeline($individual, $can_edit);
         $detail['attributes'] = $this->buildAttributes($individual, $can_edit);
         $detail['media']      = $this->buildMedia($individual);
+        // `role` is a stable key (labels are localised) so the client can map a
+        // relative back to the family that links them (unlink, F6).
         $detail['groups']     = [
-            ['label' => I18N::translate('Parents'), 'people' => $this->parents($individual)],
-            ['label' => I18N::translate('Spouses'), 'people' => $this->spouses($individual)],
-            ['label' => I18N::translate('Children'), 'people' => $this->children($individual)],
-            ['label' => I18N::translate('Siblings'), 'people' => $this->siblings($individual)],
+            ['role' => 'parents', 'label' => I18N::translate('Parents'), 'people' => $this->parents($individual)],
+            ['role' => 'spouses', 'label' => I18N::translate('Spouses'), 'people' => $this->spouses($individual)],
+            ['role' => 'children', 'label' => I18N::translate('Children'), 'people' => $this->children($individual)],
+            ['role' => 'siblings', 'label' => I18N::translate('Siblings'), 'people' => $this->siblings($individual)],
         ];
 
         if ($can_edit) {
-            $detail['addEventUrl']     = $this->factAddUrl($individual, 'EVEN');
-            $detail['addAttributeUrl'] = $this->factAddUrl($individual, 'FACT');
+            $detail['newFactUrl']      = $this->factUpdateUrl($individual, 'new');
+            $detail['vitals']          = $this->buildVitals($individual);
         }
 
         return $detail;
+    }
+
+    /**
+     * The editable vital facts (name, sex, birth, death) with their raw GEDCOM
+     * lines, so the client can build simplified edit forms that resubmit every
+     * line — update-fact REPLACES the whole fact, and untouched substructures
+     * (sources, notes) must survive a partial edit. null = the fact does not
+     * exist yet; create it via newFactUrl (fact_id=new).
+     *
+     * @return array<string, array<string, mixed>|null>
+     */
+    private function buildVitals(Individual $individual): array
+    {
+        $vitals = [];
+
+        foreach (['NAME', 'SEX', 'BIRT', 'DEAT'] as $tag) {
+            $fact = $this->visibleFacts($individual, [$tag])->first();
+
+            $vitals[strtolower($tag)] = $fact instanceof Fact
+                ? $this->factEditData($individual, $fact)
+                : null;
+        }
+
+        return $vitals;
+    }
+
+    /**
+     * The client-side editing bundle for one fact: its id (md5 of its GEDCOM —
+     * only valid until the fact changes, which the change-stamp cache keys
+     * guarantee), the core update-fact URL, and its full GEDCOM lines.
+     *
+     * @return array<string, mixed>
+     */
+    private function factEditData(GedcomRecord $record, Fact $fact): array
+    {
+        $data = [
+            'factId'    => $fact->id(),
+            'updateUrl' => $this->factUpdateUrl($record, $fact->id()),
+            'lines'     => $this->factLines($fact),
+            'pending'   => $fact->isPendingAddition(),
+        ];
+
+        // Same fact_id as updateUrl; the DeleteFact handler re-checks
+        // canEdit() itself and answers 204.
+        if ($fact->canEdit()) {
+            $data['deleteUrl'] = route(DeleteFact::class, [
+                'tree'    => $record->tree()->name(),
+                'xref'    => $record->xref(),
+                'fact_id' => $fact->id(),
+            ]);
+        }
+
+        return $data;
+    }
+
+    private function factUpdateUrl(GedcomRecord $record, string $fact_id): string
+    {
+        return route(EditFactAction::class, [
+            'tree'    => $record->tree()->name(),
+            'xref'    => $record->xref(),
+            'fact_id' => $fact_id,
+        ]);
+    }
+
+    /**
+     * Parse a fact's GEDCOM into the parallel arrays the core's update-fact
+     * handler consumes (level/tag/value per line, parents before children).
+     *
+     * @return array{levels: array<int>, tags: array<string>, values: array<string>}
+     */
+    private function factLines(Fact $fact): array
+    {
+        $levels = [];
+        $tags   = [];
+        $values = [];
+
+        foreach (preg_split('/\r?\n/', trim($fact->gedcom())) ?: [] as $line) {
+            if (preg_match('/^\s*(\d+)\s+(\w+)\s?(.*)$/', $line, $match) !== 1) {
+                continue;
+            }
+            $levels[] = (int) $match[1];
+            $tags[]   = $match[2];
+            $values[] = $match[3];
+        }
+
+        return ['levels' => $levels, 'tags' => $tags, 'values' => $values];
     }
 
     /**
@@ -639,8 +998,9 @@ final class ImprovedTreeModule extends AbstractModule implements
 
     /**
      * The individual's dated events in chronological order, for the timeline
-     * section. Each row is {label, date, place, editUrl?}. This is the full
-     * life chronology (birth, death and everything in between).
+     * section. Each row is {label, date, place} plus, for editors, the
+     * factEditData bundle (updateUrl/lines/…) that feeds the in-place editor.
+     * This is the full life chronology (birth, death and everything between).
      *
      * @return array<int, array<string, string>>
      */
@@ -648,7 +1008,7 @@ final class ImprovedTreeModule extends AbstractModule implements
     {
         $events = [];
 
-        foreach ($individual->facts([], true) as $fact) {
+        foreach ($this->visibleFacts($individual) as $fact) {
             if (in_array($this->factTag($fact), self::NON_EVENT_TAGS, true)) {
                 continue;
             }
@@ -662,7 +1022,7 @@ final class ImprovedTreeModule extends AbstractModule implements
                 'place' => $fact->place()->gedcomName(),
             ];
             if ($can_edit) {
-                $row['editUrl'] = $this->factEditUrl($individual, $fact->id());
+                $row += $this->factEditData($individual, $fact);
             }
             $events[] = $row;
         }
@@ -673,7 +1033,8 @@ final class ImprovedTreeModule extends AbstractModule implements
     /**
      * The individual's undated attributes (occupation, residence, education,
      * titles, etc.) that carry a value — the "more info" section so the user
-     * need not open the full record. Each row is {label, value, place, editUrl?}.
+     * need not open the full record. Each row is {label, value, place} plus,
+     * for editors, the factEditData bundle (updateUrl/lines/…).
      *
      * @return array<int, array<string, string>>
      */
@@ -681,7 +1042,7 @@ final class ImprovedTreeModule extends AbstractModule implements
     {
         $rows = [];
 
-        foreach ($individual->facts([], true) as $fact) {
+        foreach ($this->visibleFacts($individual) as $fact) {
             if (in_array($this->factTag($fact), self::NON_EVENT_TAGS, true)) {
                 continue;
             }
@@ -702,12 +1063,29 @@ final class ImprovedTreeModule extends AbstractModule implements
                 'place' => $place,
             ];
             if ($can_edit) {
-                $row['editUrl'] = $this->factEditUrl($individual, $fact->id());
+                $row += $this->factEditData($individual, $fact);
             }
             $rows[] = $row;
         }
 
         return $rows;
+    }
+
+    /**
+     * Facts as they will read once pending changes are approved. A pending
+     * edit makes facts() return BOTH the old fact (pending deletion) and its
+     * replacement (pending addition); showing the old one would duplicate the
+     * fact across the panel and offer an edit that silently overwrites the
+     * pending change.
+     *
+     * @param list<string> $filter
+     *
+     * @return \Illuminate\Support\Collection<int, Fact>
+     */
+    private function visibleFacts(Individual $individual, array $filter = []): \Illuminate\Support\Collection
+    {
+        return $individual->facts($filter, true)
+            ->filter(static fn (Fact $fact): bool => !$fact->isPendingDeletion());
     }
 
     /**
@@ -718,55 +1096,6 @@ final class ImprovedTreeModule extends AbstractModule implements
         $parts = explode(':', $fact->tag());
 
         return (string) end($parts);
-    }
-
-    private function factEditUrl(Individual $individual, string $fact_id): string
-    {
-        return route(EditFactPage::class, [
-            'tree'    => $individual->tree()->name(),
-            'xref'    => $individual->xref(),
-            'fact_id' => $fact_id,
-        ]);
-    }
-
-    private function factAddUrl(Individual $individual, string $subtag): string
-    {
-        return route(AddNewFact::class, [
-            'tree' => $individual->tree()->name(),
-            'xref' => $individual->xref(),
-            'fact' => $subtag,
-        ]);
-    }
-
-    /**
-     * A curated set of life events, each as {label, value, place}.
-     *
-     * @return array<int, array<string, string>>
-     */
-    private function buildFacts(Individual $individual, bool $can_edit = false): array
-    {
-        $facts = [];
-
-        foreach ($individual->facts(['BIRT', 'CHR', 'DEAT', 'BURI', 'OCCU', 'RESI'], true) as $fact) {
-            $value = strip_tags($fact->date()->display());
-            $place = $fact->place()->gedcomName();
-
-            if ($value === '' && $place === '') {
-                continue;
-            }
-
-            $row = [
-                'label' => strip_tags($fact->label()),
-                'value' => $value,
-                'place' => $place,
-            ];
-            if ($can_edit) {
-                $row['editUrl'] = $this->factEditUrl($individual, $fact->id());
-            }
-            $facts[] = $row;
-        }
-
-        return $facts;
     }
 
     /**
