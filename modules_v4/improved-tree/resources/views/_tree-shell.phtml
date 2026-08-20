@@ -144,6 +144,18 @@ use Fisharebest\Webtrees\Individual;
                 <button type="button" class="itree-fs__btn" data-itree-export-svg title="<?= e(I18N::translate('Download as SVG')) ?>">SVG</button>
                 <button type="button" class="itree-fs__btn" data-itree-print title="<?= e(I18N::translate('Print')) ?>"><?= I18N::translate('Print') ?></button>
             </span>
+
+            <?php // Mobile only: the bar hides the legend "i", so the legend joins this sheet. ?>
+            <div class="itree-fs__legend-inline">
+                <span class="itree-legend__item"><i class="itree-legend__swatch itree-legend__swatch--M"></i><?= I18N::translate('Male') ?></span>
+                <span class="itree-legend__item"><i class="itree-legend__swatch itree-legend__swatch--F"></i><?= I18N::translate('Female') ?></span>
+                <span class="itree-legend__item"><i class="itree-legend__swatch itree-legend__swatch--root"></i><?= I18N::translate('Main person') ?></span>
+                <span class="itree-legend__item"><i class="itree-legend__line itree-legend__line--lineage"></i><?= I18N::translate('Filiation') ?></span>
+                <span class="itree-legend__item"><i class="itree-legend__line itree-legend__line--spouse"></i><?= I18N::translate('Couple') ?></span>
+                <?php if ($can_edit) : ?>
+                <span class="itree-legend__item"><i class="itree-legend__swatch itree-legend__swatch--pending"></i><?= I18N::translate('Pending changes') ?></span>
+                <?php endif ?>
+            </div>
         </div>
         </div>
     </header>
@@ -181,6 +193,7 @@ use Fisharebest\Webtrees\Individual;
         </div>
 
         <aside class="itree-panel" data-itree-panel aria-label="<?= e(I18N::translate('Details')) ?>">
+            <button type="button" class="itree-panel__grip" data-itree-panel-grip aria-label="<?= e(I18N::translate('Collapse')) ?>"></button>
             <button type="button" class="itree-panel__collapse" data-itree-panel-collapse title="<?= e(I18N::translate('Collapse')) ?>" aria-label="<?= e(I18N::translate('Collapse')) ?>">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M15 6l-6 6 6 6"></path>
