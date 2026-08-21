@@ -1,0 +1,53 @@
+<?php
+
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Individual;
+use Fisharebest\Webtrees\Tree;
+
+/**
+ * @var bool            $is_admin
+ * @var Individual      $individual
+ * @var array<stdClass> $stories
+ * @var Tree            $tree
+ */
+
+?>
+
+<div class="wt-tab-stories py-4">
+    <?php foreach ($stories as $story) : ?>
+        <?
+        /**
+         * Add a container for each story
+         */
+        ?>
+        <article class="story mb-4 pb-4">
+            <header class="wt-story-title text-center">
+                <h3><?= e($story->title) ?></h3>
+            </header>
+            <div class="wt-story-body">
+                <p><?= $story->story_body ?></p>
+            </div>
+            <?php if ($is_admin) : ?>
+                <footer class="wt-story-edit-link text-right">
+                    <a href="<?= e(route('module', ['module' => 'stories', 'action' => 'AdminEdit', 'block_id' => $story->block_id, 'tree' => $tree->name(), 'url' => $individual->url()])) ?>" class="btn btn-link">
+                        <?= view('icons/edit') ?>
+                        <?= I18N::translate('Edit the story') ?>
+                    </a>
+                </footer>
+            <?php endif ?>
+        </article>
+    <?php endforeach ?>
+
+    <?
+    /**
+     * Display Add link even when there are existing stories
+     */
+    ?>
+    <?php if ($is_admin) : ?>
+        <p class="wt-story-add-link">
+            <a href="<?= e(route('module', ['module' => 'stories', 'action' => 'AdminEdit', 'xref' => $individual->xref(), 'tree' => $tree->name(), 'url' => $individual->url()])) ?>">
+                <?= I18N::translate('Add a story') ?>
+            </a>
+        </p>
+    <?php endif ?>
+</div>

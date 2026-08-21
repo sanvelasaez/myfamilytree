@@ -1,0 +1,49 @@
+<?php
+
+/**
+ * Adjust vertical positioning of lifespan rows and set background based on global gender class
+ */
+
+use Fisharebest\Webtrees\Gedcom;
+
+/**
+ * @var string        $dir
+ * @var int           $end_year
+ * @var array<object> $lifespans
+ * @var int           $max_rows
+ * @var int           $start_year
+ * @var string        $subtitle
+ */
+
+?>
+
+<p class="wt-lifespans-subtitle">
+    <?= $subtitle ?>
+</p>
+
+<div class="wt-lifespans-scale">
+    <?php for ($year = $start_year; $year < $end_year; $year += 10) :
+        ?><div class="wt-lifespans-decade"><?= $year ?></div><?php
+    endfor ?>
+</div>
+
+<div class="wt-lifespans-individuals position-relative" style="height: <?= (5 + $max_rows) * 1.5 ?>rem; width: <?= ($end_year - $start_year) * 7 ?>px;">
+    <?php foreach ($lifespans as $lifespan) : ?>
+    <a href="#" data-bs-toggle="collapse" data-bs-target="#<?= e($lifespan->id) ?>" aria-expanded="false" aria-controls="<?= e($lifespan->id) ?>">
+        <div class="wt-lifespans-individual position-absolute text-nowrap text-truncate <?= $lifespan->individual->sex() === 'M' ? 'wt-sex-m' : ($lifespan->individual->sex() === 'F' ? 'wt-sex-f' : 'wt-sex-u') ?>" dir="auto" style="<?= $dir === 'ltr' ? 'left' : 'right' ?>:<?= ($lifespan->birth_year - $start_year) * 7 ?>px; top:<?= $lifespan->row * 2.5 ?>rem; width:<?= ($lifespan->death_year - $lifespan->birth_year) * 7 + 5 ?>px;">
+            <?= $lifespan->individual->fullName() ?>
+            <?= strip_tags($lifespan->individual->lifespan()) ?>
+        </div>
+    </a>
+
+    <div class="wt-lifespans-summary collapse position-absolute" id="<?= e($lifespan->id) ?>" style="<?= $dir === 'ltr' ? 'left' : 'right' ?>:<?= (min($lifespan->birth_year, $end_year - 50) - $start_year) * 7 ?>px; top:<?= ($lifespan->row + 1) * 1.5 ?>rem; width:350px;">
+        <a class="wt-lifespans-summary-link" href="<?= e($lifespan->individual->url()) ?>">
+            <?= $lifespan->individual->fullName() ?>
+        </a>
+
+        <?php foreach ($lifespan->individual->facts(array_merge(Gedcom::BIRTH_EVENTS, Gedcom::DEATH_EVENTS), true) as $fact) : ?>
+            <?= $fact->summary() ?>
+        <?php endforeach ?>
+    </div>
+    <?php endforeach ?>
+</div>

@@ -1,0 +1,6 @@
+<?php
+
+$view = view('::lists/surnames-table', get_defined_vars());
+$view = preg_replace('/table-bordered table-sm /', '', $view); // Remove small and bordered classes from table
+
+echo $view;

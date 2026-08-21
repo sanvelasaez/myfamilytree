@@ -1,0 +1,11 @@
+<?php
+
+$view = view('::calendar-list', get_defined_vars());
+
+$view = preg_replace('/table class="w-100"/', 'table class="table table-bordered w-100"', $view); // Add table class for padding and add table border class
+$view = preg_replace('/<tr>(\r\n|\r|\n|\s)+<td class="wt-page-options-label/', '<thead><tr><th class="wt-page-options-label', $view); // Change first row to thead and change first cell to th
+$view = preg_replace('/<\/td>(\r\n|\r|\n|\s)+<td class="wt-page-options-label/', '</th><th class="wt-page-options-label', $view); // Change subsequent cells in first row to th
+$view = preg_replace('/<\/td>(\r\n|\r|\n|\s)+<\/tr>(\r\n|\r|\n|\s)+<tr>(\r\n|\r|\n|\s)+<td class="wt-page-options-value/', '</th></tr></thead><tbody><tr><td class="wt-page-options-value', $view); // Close thead and open tbody before first value cell 
+$view = preg_replace('/<\/tr>(\r\n|\r|\n|\s)+<\/table>/', '</tr></tbody></table>', $view); // Close tbody before table end
+
+echo $view;
