@@ -72,7 +72,7 @@ final class ImprovedTreeModule extends AbstractModule implements
 
     public const CUSTOM_TITLE = 'Improved Tree';
     public const CUSTOM_AUTHOR = 'sanvelas';
-    public const CUSTOM_VERSION = '1.5.4';
+    public const CUSTOM_VERSION = '1.6.0';
 
     // Allowed values / ranges for admin preferences.
     private const ALLOWED_MODES = ['vertical'];
@@ -190,8 +190,8 @@ final class ImprovedTreeModule extends AbstractModule implements
                 'Interactive tree'                => 'Árbol interactivo',
                 'Improved tree of %s'             => 'Árbol interactivo de %s',
                 'Collapse'                        => 'Contraer',
-                'The tree was truncated because it reached the node limit for your role.'
-                                                  => 'El árbol se ha truncado al alcanzar el límite de nodos de tu rol.',
+                'The tree is very large, so only part of it is shown. Select a person to see more of their branch.'
+                                                  => 'El árbol es muy grande y se muestra solo una parte. Toca a una persona para ver más de su rama.',
                 'Defaults'                        => 'Valores por defecto',
                 'Default ancestor depth'          => 'Profundidad de ascendientes por defecto',
                 'Default descendant depth'        => 'Profundidad de descendientes por defecto',
@@ -224,6 +224,37 @@ final class ImprovedTreeModule extends AbstractModule implements
                 'Main person'                     => 'Persona principal',
                 'Filiation'                       => 'Filiación',
                 'Couple'                          => 'Pareja',
+                'Starting person'                 => 'Persona inicial',
+                'Selected person'                 => 'Persona seleccionada',
+                'Parents and children'            => 'Padres e hijos',
+                'Person without details yet'      => 'Persona sin datos (desconocida)',
+                'Private information'             => 'Información privada',
+                'Also appears in another branch'  => 'Aparece también en otra rama',
+                'How much family to show'         => '¿Cuánta familia mostrar?',
+                'Choose generations manually…'    => 'Elegir generaciones a mano…',
+                'Close family only'               => 'Solo la familia cercana',
+                'Also grandparents and grandchildren'
+                                                  => 'También abuelos y nietos',
+                'Extended family (uncles, aunts and cousins)'
+                                                  => 'Familia extensa (tíos y primos)',
+                'Very extended family'            => 'Familia muy extensa',
+                'Everything possible (level %s)'  => 'Todo lo posible (nivel %s)',
+                'Generations up (ancestors)'      => 'Generaciones hacia arriba (antepasados)',
+                'Generations down (descendants)'  => 'Generaciones hacia abajo (descendientes)',
+                'Save image'                      => 'Guardar imagen',
+                'Save drawing (SVG)'              => 'Guardar dibujo (SVG)',
+                'Save the tree as an image (PNG)' => 'Guardar el árbol como imagen (PNG)',
+                'Save the tree as a scalable drawing (SVG)'
+                                                  => 'Guardar el árbol como dibujo escalable (SVG)',
+                'View the tutorial'               => 'Ver el tutorial',
+                'Generations'                     => 'Generaciones',
+                'Generations before/after this person'
+                                                  => 'Generaciones antes/después de esta persona',
+                'Show cousins of the main person' => 'Mostrar primos de la persona principal',
+                'The interactive tree needs JavaScript. You can still browse the records directly.'
+                                                  => 'El árbol interactivo necesita JavaScript. Puedes seguir consultando las fichas directamente.',
+                'Open the record'                 => 'Abrir la ficha',
+                'Text size'                       => 'Tamaño del texto',
                 'Create individual'               => 'Crear individuo',
                 'Photos'                          => 'Fotos',
                 'Options'                         => 'Opciones',
@@ -436,11 +467,13 @@ final class ImprovedTreeModule extends AbstractModule implements
                 'tree'    => $tree->name(),
                 'xref'    => $individual->xref(),
             ]),
-            'edit_context_url' => route('module', [
+            // Sin permisos de edición la URL no se emite: el JS no crea el
+            // subsistema de edición y el visitante no ve lápices ni "Quitar".
+            'edit_context_url' => Auth::isEditor($tree) ? route('module', [
                 'module' => $this->name(),
                 'action' => 'EditContext',
                 'tree'   => $tree->name(),
-            ]),
+            ]) : '',
             // The record with pending changes is only known at settle time (it
             // may even be a FAM), so the client fills in the xref itself.
             'accept_url_template' => route(PendingChangesAcceptRecord::class, [
@@ -822,23 +855,50 @@ final class ImprovedTreeModule extends AbstractModule implements
 
         $words = preg_split('/\s+/', $q) ?: [$q];
 
+        // Uno más del tope: si aparece, hay más resultados que no se muestran
+        // y el cliente lo avisa (antes el corte a 15 era silencioso y la
+        // persona buscada "no existía").
         $search      = Registry::container()->get(SearchService::class);
-        $individuals = $search->searchIndividualNames([$tree], $words, 0, 15);
+        $individuals = $search->searchIndividualNames([$tree], $words, 0, 16);
 
-        $results = [];
+        $results  = [];
+        $has_more = false;
         foreach ($individuals as $individual) {
             if (!$individual->canShowName()) {
                 continue;
             }
+            if (count($results) >= 15) {
+                $has_more = true;
+                break;
+            }
+            // Contexto de desambiguación: en genealogía los nombres se repiten
+            // generación tras generación; lugar de nacimiento y padres son lo
+            // único que separa a dos homónimos en la lista.
+            $birth_place = $individual->canShow()
+                ? strip_tags($individual->getBirthPlace()->placeName())
+                : '';
+            $parents = [];
+            if ($individual->canShow()) {
+                $child_family = $individual->childFamilies()->first();
+                if ($child_family !== null) {
+                    foreach ($child_family->spouses() as $parent) {
+                        if ($parent->canShowName()) {
+                            $parents[] = strip_tags($parent->fullName());
+                        }
+                    }
+                }
+            }
             $results[] = [
-                'xref'     => $individual->xref(),
-                'name'     => strip_tags($individual->fullName()),
-                'sex'      => $individual->sex(),
-                'lifespan' => $this->lifespan($individual),
+                'xref'       => $individual->xref(),
+                'name'       => strip_tags($individual->fullName()),
+                'sex'        => $individual->sex(),
+                'lifespan'   => $this->lifespan($individual),
+                'birthPlace' => $birth_place,
+                'parents'    => $parents,
             ];
         }
 
-        return response($results);
+        return response(['results' => $results, 'hasMore' => $has_more]);
     }
 
     /**
