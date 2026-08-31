@@ -14,6 +14,12 @@ use Fisharebest\Webtrees\Individual;
  * @var string     $graph_url
  * @var string     $detail_url
  * @var string     $search_url
+ * @var string     $relationship_url
+ * @var string     $list_url
+ * @var bool       $enable_pedigree
+ * @var bool       $enable_fan
+ * @var int        $flip_limit
+ * @var bool       $enable_list
  * @var string     $tree_url
  * @var string     $back_url
  * @var string     $edit_context_url
@@ -45,13 +51,15 @@ $level_labels = [
      data-graph-url="<?= e($graph_url) ?>"
      data-detail-url="<?= e($detail_url) ?>"
      data-search-url="<?= e($search_url) ?>"
+     data-relationship-url="<?= e($relationship_url) ?>"
      data-tree-url="<?= e($tree_url) ?>"
      data-root-xref="<?= e($individual->xref()) ?>"
      data-back-url="<?= e($back_url) ?>"
      data-edit-context-url="<?= e($edit_context_url) ?>"
      data-accept-url-template="<?= e($accept_url_template) ?>"
      data-can-edit="<?= $can_edit ? '1' : '' ?>"
-     data-can-moderate="<?= $can_moderate ? '1' : '' ?>">
+     data-can-moderate="<?= $can_moderate ? '1' : '' ?>"
+     data-flip-limit="<?= (int) ($flip_limit ?? 0) ?>">
 
     <header class="itree-fs__bar">
         <div class="itree-fs__brand">
@@ -61,6 +69,48 @@ $level_labels = [
                 </svg>
             </a>
             <span class="itree-fs__brand-title"><?= e($individual->tree()->title()) ?></span>
+            <span class="itree-fs__count" data-itree-count hidden></span>
+
+            <div class="itree-views itree-noprint" data-itree-views>
+                <button type="button" class="itree-views__btn" data-itree-views-toggle aria-expanded="false" aria-haspopup="true" aria-label="<?= e(I18N::translate('View')) ?>">
+                    <span data-itree-views-current><?= I18N::translate('Tree') ?></span>
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+                </button>
+                <div class="itree-views__pop" data-itree-views-pop hidden>
+                    <button type="button" class="itree-views__item itree-views__item--on" data-itree-view="tree" aria-pressed="true">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="9" y="3" width="6" height="5" rx="1.5"></rect><rect x="2.5" y="16" width="6" height="5" rx="1.5"></rect><rect x="15.5" y="16" width="6" height="5" rx="1.5"></rect>
+                            <path d="M12 8v4M12 12H5.5v4M12 12h6.5v4"></path>
+                        </svg>
+                        <span class="itree-views__label"><?= I18N::translate('Tree') ?></span>
+                    </button>
+                    <?php if ($enable_pedigree) : ?>
+                        <button type="button" class="itree-views__item" data-itree-view="pedigree" aria-pressed="false">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="2.5" y="9.5" width="6" height="5" rx="1.5"></rect><rect x="15.5" y="3" width="6" height="5" rx="1.5"></rect><rect x="15.5" y="16" width="6" height="5" rx="1.5"></rect>
+                                <path d="M8.5 12h4M12.5 12V5.5h3M12.5 12v6.5h3"></path>
+                            </svg>
+                            <span class="itree-views__label"><?= I18N::translate('Pedigree') ?></span>
+                        </button>
+                    <?php endif ?>
+                    <?php if ($enable_fan) : ?>
+                        <button type="button" class="itree-views__item" data-itree-view="fan" aria-pressed="false">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                <path d="M12 21a9 9 0 0 1 9-9M12 21a9 9 0 0 0-9-9M12 21V3M12 21l6.4-6.4M12 21 5.6 14.6"></path>
+                            </svg>
+                            <span class="itree-views__label"><?= I18N::translate('Fan') ?></span>
+                        </button>
+                    <?php endif ?>
+                    <?php if ($enable_list && $list_url !== '') : ?>
+                        <a class="itree-views__item" href="<?= e($list_url) ?>">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                <path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"></path>
+                            </svg>
+                            <span class="itree-views__label"><?= I18N::translate('List') ?></span>
+                        </a>
+                    <?php endif ?>
+                </div>
+            </div>
         </div>
 
         <div class="itree-fs__helm" data-itree-nav>
@@ -81,15 +131,20 @@ $level_labels = [
             </button>
             <div class="itree-fs__gens-pop" data-itree-gens-pop hidden>
                 <button type="button" class="itree-fs__gens-close" data-itree-gens-close aria-label="<?= e(I18N::translate('close')) ?>">×</button>
-                <p class="itree-fs__gens-title"><?= I18N::translate('Generations before/after this person') ?></p>
+                <p class="itree-fs__gens-title" data-itree-gens-title><?= I18N::translate('Generations before/after this person') ?></p>
                 <input type="range" min="1" max="5" step="1" value="<?= $gens_val ?>" class="itree-fs__gens-range" data-itree-gens-range aria-label="<?= e(I18N::translate('Generations before/after this person')) ?>">
-                <div class="itree-fs__gens-marks" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5+</span></div>
-                <label class="itree-fs__check itree-fs__gens-sib">
-                    <input type="checkbox" data-itree-gens-sib <?= $default_include_siblings ? 'checked' : '' ?>>
-                    <?= I18N::translate('Show cousins of the main person') ?>
-                </label>
+                <div class="itree-fs__gens-marks" data-itree-gens-marks aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5+</span></div>
             </div>
         </div>
+
+        <label class="itree-fs__fan-gens itree-noprint" data-itree-fan-gens-wrap>
+            <span><?= I18N::translate('Generations') ?>:</span>
+            <select data-itree-fan-gens aria-label="<?= e(I18N::translate('Generations of ancestors')) ?>">
+                <?php foreach (range(4, 10) as $fg) : ?>
+                    <option value="<?= $fg ?>" <?= $fg === 6 ? 'selected' : '' ?>><?= $fg ?></option>
+                <?php endforeach ?>
+            </select>
+        </label>
 
         <div class="itree-fs__search" data-itree-search>
             <svg class="itree-fs__search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
@@ -99,6 +154,17 @@ $level_labels = [
 
 
         <div class="itree-fs__options itree-noprint" data-itree-options>
+        <button type="button" class="itree-themeswitch" data-itree-theme role="switch" aria-checked="false" title="<?= e(I18N::translate('Theme')) ?>" aria-label="<?= e(I18N::translate('Theme')) ?>">
+            <span class="itree-themeswitch__knob" aria-hidden="true">
+                <svg class="itree-themeswitch__sun" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="4.5"></circle>
+                    <path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M5 5l1.7 1.7M17.3 17.3 19 19M19 5l-1.7 1.7M6.7 17.3 5 19"></path>
+                </svg>
+                <svg class="itree-themeswitch__moon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11z"></path>
+                </svg>
+            </span>
+        </button>
         <button type="button" class="itree-fs__toggle" data-itree-refresh title="<?= e(I18N::translate('Refresh')) ?>" aria-label="<?= e(I18N::translate('Refresh')) ?>">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 3v6h-6"></path>
@@ -161,6 +227,14 @@ $level_labels = [
                 <?= I18N::translate('Photos') ?>
             </label>
 
+
+            <?php if ($can_edit) : ?>
+                <label class="itree-fs__check">
+                    <input type="checkbox" data-itree-parent-placeholders checked>
+                    <?= I18N::translate('Slots to add missing parents') ?>
+                </label>
+            <?php endif ?>
+
             <span class="itree-fs__group itree-fs__group--export">
                 <button type="button" class="itree-fs__btn" data-itree-export-png aria-label="<?= e(I18N::translate('Save the tree as an image (PNG)')) ?>" title="<?= e(I18N::translate('Save the tree as an image (PNG)')) ?>"><?= I18N::translate('Save image') ?></button>
                 <button type="button" class="itree-fs__btn" data-itree-export-svg aria-label="<?= e(I18N::translate('Save the tree as a scalable drawing (SVG)')) ?>" title="<?= e(I18N::translate('Save the tree as a scalable drawing (SVG)')) ?>"><?= I18N::translate('Save drawing (SVG)') ?></button>
@@ -189,6 +263,8 @@ $level_labels = [
         </noscript>
 
         <svg class="itree-fs__svg" data-itree-svg width="100%" height="100%"></svg>
+
+        <svg class="itree-fs__svg itree-fs__svg--fan" data-itree-fan-svg width="100%" height="100%"></svg>
 
         <div class="itree-minimap itree-noprint" data-itree-minimap aria-hidden="true">
             <svg class="itree-minimap__svg" data-itree-minimap-svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet"></svg>

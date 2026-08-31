@@ -14,6 +14,11 @@ use ImprovedTree\ImprovedTreeModule;
  * @var string             $graph_url
  * @var string             $detail_url
  * @var string             $search_url
+ * @var string             $relationship_url
+ * @var string             $list_url
+ * @var bool               $enable_pedigree
+ * @var bool               $enable_fan
+ * @var bool               $enable_list
  * @var string             $tree_url
  * @var string             $back_url
  * @var string             $edit_context_url
@@ -29,6 +34,7 @@ use ImprovedTree\ImprovedTreeModule;
  * @var bool               $default_include_spouses
  * @var bool               $default_include_siblings
  * @var bool               $default_show_photos
+ * @var int                $flip_limit
  */
 
 ?>
@@ -37,6 +43,12 @@ use ImprovedTree\ImprovedTreeModule;
     'graph_url'                    => $graph_url,
     'detail_url'                   => $detail_url,
     'search_url'                   => $search_url,
+    'relationship_url'             => $relationship_url,
+    'list_url'                     => $list_url,
+    'enable_pedigree'              => $enable_pedigree,
+    'enable_fan'                   => $enable_fan,
+    'enable_list'                  => $enable_list,
+    'flip_limit'                   => $flip_limit,
     'tree_url'                     => $tree_url,
     'back_url'                     => $back_url,
     'edit_context_url'             => $edit_context_url,

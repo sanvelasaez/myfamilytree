@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ImprovedTree;
 
 use Fisharebest\Webtrees\Auth;
+use Fisharebest\Webtrees\Date;
 use Fisharebest\Webtrees\Family;
 use Fisharebest\Webtrees\I18N;
 use Fisharebest\Webtrees\Individual;
@@ -25,6 +26,9 @@ class GraphBuilder
 
     /** @var array<string, string> xref => 'new'|'changed' (records with pending edits) */
     private array $pending = [];
+
+    /** @var array<string, Individual> xref => individuo materializado (no phantom) */
+    private array $ref = [];
 
     /**
      * Records with unapproved changes, so cards can wear a "pending" badge.
@@ -75,6 +79,49 @@ class GraphBuilder
         }
 
         return $this->getResult();
+    }
+
+    /**
+     * Ancestors-only graph for the pedigree view: reuses the ancestor
+     * level-BFS (no descendants, no spouses, no siblings, no phantom
+     * spouses — client placeholders cover the gaps) and adds
+     * meta.rootChildren for the root's descend arrow.
+     */
+    public function buildPedigree(
+        Individual $root,
+        int $depth,
+        int $limit = 500,
+        bool $show_photos = true,
+        bool $show_dates = true
+    ): array {
+        $this->reset($root, $limit, $show_photos, $show_dates);
+        $this->addNode($root, 0);
+
+        $frontier = [$root];
+        for ($level = 1; $level <= $depth && !$this->truncated; $level++) {
+            $frontier = $this->expandAncestorLevel($frontier, $level);
+        }
+
+        $result = $this->getResult();
+        $result['layout'] = 'pedigree';
+
+        // Hijos de la raíz para la flecha de descendencia (canShowName: el
+        // mismo umbral con el que addNode muestra un nombre).
+        $children = [];
+        foreach ($root->spouseFamilies() as $family) {
+            foreach ($family->children() as $child) {
+                if ($child->canShowName()) {
+                    $children[$child->xref()] = [
+                        'id'    => $child->xref(),
+                        'label' => strip_tags($child->fullName()),
+                        'sex'   => $child->sex(),
+                    ];
+                }
+            }
+        }
+        $result['meta']['rootChildren'] = array_values($children);
+
+        return $result;
     }
 
     /**
@@ -279,9 +326,75 @@ class GraphBuilder
                     'husb'        => $family->husband()?->xref(),
                     'wife'        => $family->wife()?->xref(),
                     'pending'     => $this->pending[$family->xref()] ?? null,
+                    'marriage'    => $this->marriageInfo($family),
                 ];
             }
         }
+    }
+
+    /**
+     * Marriage summary for a union's clickable badge: year, record status
+     * (married / divorced) and whether the anniversary falls within a week
+     * (both spouses alive and still married). Null when nothing is recorded
+     * or the family is private.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function marriageInfo(Family $family): ?array
+    {
+        if (!$family->canShow()) {
+            return null;
+        }
+
+        $date = $family->getMarriageDate();
+        $year = $date->minimumDate()->year ?: null;
+
+        $status = null;
+        if ($family->facts(['DIV'])->isNotEmpty()) {
+            $status = 'DIV';
+        } elseif ($family->facts(['MARR'])->isNotEmpty()) {
+            $status = 'MARR';
+        }
+
+        if ($year === null && $status === null) {
+            return null;
+        }
+
+        $alive = $status === 'MARR';
+        foreach ($family->spouses() as $spouse) {
+            if ($spouse->isDead()) {
+                $alive = false;
+            }
+        }
+
+        return [
+            'year'   => $year,
+            'status' => $status,
+            'soon'   => $alive && $this->isUpcoming($date),
+        ];
+    }
+
+    /**
+     * Does the month/day of this date fall within the next 7 days? Drives the
+     * birthday/anniversary badges. Non-gregorian calendars compare their own
+     * month numbers — close enough for a decorative hint.
+     */
+    private function isUpcoming(Date $date): bool
+    {
+        $min = $date->minimumDate();
+        if ($min->day() === 0 || $min->month() === 0) {
+            return false;
+        }
+
+        $today = new \DateTimeImmutable('today');
+        for ($i = 0; $i <= 7; $i++) {
+            $d = $today->modify('+' . $i . ' days');
+            if ((int) $d->format('n') === $min->month() && (int) $d->format('j') === $min->day()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -297,7 +410,13 @@ class GraphBuilder
             return null;
         }
 
-        $id  = '__phantom-' . $family->xref() . '-' . $this->phantomCount++;
+        // Id DETERMINISTA (solo el xref de la familia, una familia solo puede
+        // tener un fantasma): con el ordinal por-build de antes, dos grafos de
+        // vecindarios distintos traían el MISMO fantasma con ids diferentes y
+        // el merge aditivo del cliente sembraba «Desconocidos» duplicados
+        // descolgados de su barra.
+        $id  = '__phantom-' . $family->xref();
+        $this->phantomCount++;
         $sex = $known['sex'] === 'M' ? 'F' : ($known['sex'] === 'F' ? 'M' : 'U');
 
         $this->nodes[$id] = [
@@ -331,6 +450,7 @@ class GraphBuilder
         $this->edges      = [];
         $this->families   = [];
         $this->visited    = [];
+        $this->ref        = [];
         $this->nodeCount  = 0;
         $this->phantomCount = 0;
         $this->limit      = max($limit, 1);
@@ -362,6 +482,7 @@ class GraphBuilder
         }
 
         $this->visited[$xref] = true;
+        $this->ref[$xref]     = $individual;
 
         // Privacy first: only compute the expensive fields (name, dates, photo) for
         // data the viewer may actually see. This is the single pass that used to be
@@ -384,6 +505,15 @@ class GraphBuilder
             $thumbnail = $this->showPhotos ? $this->getThumbnail($individual) : null;
         }
 
+        // Apellido del nombre primario (modo «Apellidos» del abanico). Los
+        // marcadores GEDCOM de apellido desconocido (@N.N.) se limpian.
+        $surname = '';
+        if ($can_show_name) {
+            $names   = $individual->getAllNames();
+            $primary = $names[$individual->getPrimaryName()] ?? null;
+            $surname = trim(str_replace('@N.N.', '', $primary['surname'] ?? ''));
+        }
+
         // Edit capabilities, surfaced as the "+" and camera controls on each
         // card. Bare flags: the client's popups resolve their own endpoints
         // through the EditContext, so no page URL travels in the graph JSON.
@@ -392,10 +522,16 @@ class GraphBuilder
         // mirror the core UI, which hides "add media" when it is not met.
         $can_add_media = $can_edit && Auth::canUploadMedia($individual->tree(), Auth::user());
 
+        $celebration = null;
+        if ($can_show && !$individual->isDead() && $this->isUpcoming($individual->getBirthDate())) {
+            $celebration = 'birthday';
+        }
+
         $this->nodes[$xref] = [
             'id' => $xref,
             'type' => 'individual',
             'label' => $label,
+            'surname' => $surname,
             'url' => $individual->url(),
             'sex' => $individual->sex(),
             'lifespan' => $lifespan,
@@ -405,6 +541,10 @@ class GraphBuilder
             'isImplex' => false,
             'limited' => !$can_show && $can_show_name,
             'canAddMedia' => $can_add_media,
+            'celebration' => $celebration,
+            // Verdad del registro (no del recorte): sin familia de origen en
+            // los DATOS. Alimenta los huecos «Añadir padre/madre» del cliente.
+            'noParents' => $individual->childFamilies()->isEmpty(),
             'add' => $can_edit ? true : null,
             'canEdit' => $can_edit,
             'pending' => $this->pending[$xref] ?? null,
@@ -561,8 +701,59 @@ class GraphBuilder
         return null;
     }
 
+    /**
+     * Marca con hasMore=true cada nodo materializado que tenga familia próxima
+     * (padres, hermanos, cónyuges o hijos) visible para este usuario y ausente
+     * del grafo — alimenta el icono «ver su familia cercana» (re-root).
+     */
+    private function markHasMore(): void
+    {
+        foreach ($this->ref as $xref => $individual) {
+            if ($this->hasUnloadedFamily($individual)) {
+                $this->nodes[$xref]['hasMore'] = true;
+            }
+        }
+    }
+
+    private function hasUnloadedFamily(Individual $individual): bool
+    {
+        $xref = $individual->xref();
+
+        foreach ($individual->childFamilies() as $family) {
+            foreach ($family->spouses() as $parent) {
+                if (!isset($this->nodes[$parent->xref()]) && $parent->canShowName()) {
+                    return true;
+                }
+            }
+            foreach ($family->children() as $sibling) {
+                $sx = $sibling->xref();
+                if ($sx !== $xref && !isset($this->nodes[$sx]) && $sibling->canShowName()) {
+                    return true;
+                }
+            }
+        }
+
+        foreach ($individual->spouseFamilies() as $family) {
+            foreach ($family->spouses() as $spouse) {
+                $sx = $spouse->xref();
+                if ($sx !== $xref && !isset($this->nodes[$sx]) && $spouse->canShowName()) {
+                    return true;
+                }
+            }
+            foreach ($family->children() as $child) {
+                if (!isset($this->nodes[$child->xref()]) && $child->canShowName()) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private function getResult(): array
     {
+        $this->markHasMore();
+
         return [
             'root' => $this->rootXref,
             'layout' => 'vertical',

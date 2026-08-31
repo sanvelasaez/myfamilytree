@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace ImprovedTree;
 
+use Fisharebest\Algorithm\Dijkstra;
+use Fisharebest\Webtrees\Age;
 use Fisharebest\Webtrees\Auth;
+use Fisharebest\Webtrees\Date;
 use Fisharebest\Webtrees\DB;
 use Fisharebest\Webtrees\Family;
 use Fisharebest\Webtrees\FlashMessages;
@@ -41,6 +44,10 @@ use Fisharebest\Webtrees\Module\ModuleMenuInterface;
 use Fisharebest\Webtrees\Module\ModuleMenuTrait;
 use Fisharebest\Webtrees\Menu;
 use Fisharebest\Webtrees\Registry;
+use Fisharebest\Webtrees\Module\IndividualListModule;
+use Fisharebest\Webtrees\Module\ModuleListInterface;
+use Fisharebest\Webtrees\Services\ModuleService;
+use Fisharebest\Webtrees\Services\RelationshipService;
 use Fisharebest\Webtrees\Services\SearchService;
 use Fisharebest\Webtrees\Session;
 use Fisharebest\Webtrees\Tree;
@@ -72,10 +79,13 @@ final class ImprovedTreeModule extends AbstractModule implements
 
     public const CUSTOM_TITLE = 'Improved Tree';
     public const CUSTOM_AUTHOR = 'sanvelas';
-    public const CUSTOM_VERSION = '1.6.0';
+    public const CUSTOM_VERSION = '1.7.1';
 
     // Allowed values / ranges for admin preferences.
     private const ALLOWED_MODES = ['vertical'];
+
+    /** Modos de dibujo que acepta el endpoint Graph (vertical = árbol clásico). */
+    private const ALLOWED_VIEWS = ['vertical', 'pedigree'];
     private const MIN_DEPTH = 0;
     private const MAX_DEPTH = 25;
     private const MIN_LINK_LEVEL = 0;
@@ -101,6 +111,12 @@ final class ImprovedTreeModule extends AbstractModule implements
         'default_show_photos' => '1',
         'default_show_dates' => '1',
         'show_home_button' => '1',
+        // Vistas disponibles en el conmutador (el árbol es la base, siempre).
+        'enable_pedigree' => '1',
+        'enable_fan' => '1',
+        'enable_list' => '1',
+        // Tope de tarjetas que la animación FLIP mueve a la vez (0 = sin límite).
+        'flip_limit' => '0',
         'max_nodes_guest' => '500',
         'max_nodes_user' => '1000',
         'max_nodes_admin' => '2000',
@@ -189,6 +205,23 @@ final class ImprovedTreeModule extends AbstractModule implements
             return [
                 'Interactive tree'                => 'Árbol interactivo',
                 'Improved tree of %s'             => 'Árbol interactivo de %s',
+                'Branch colours'                  => 'Colores por rama',
+                'Slots to add missing parents'    => 'Huecos para añadir padres',
+                'Fan view'                        => 'Vista de abanico',
+                'Animation card limit'            => 'Límite de tarjetas animadas',
+                'Maximum number of cards the tree animates when it reorganises (0 = no limit). Lower it if large trees feel sluggish.' => 'Número máximo de tarjetas que el árbol anima al reorganizarse (0 = sin límite). Bájalo si los árboles grandes van a tirones.',
+                'Generations of ancestors'        => 'Generaciones de ascendientes',
+                'Pedigree'                        => 'Pedigrí',
+                'Surnames'                        => 'Apellidos',
+                'Views'                           => 'Vistas',
+                'Theme'                           => 'Tema',
+                'Which views the tree switcher offers. The family tree view is always available.'
+                                                  => 'Qué vistas ofrece el conmutador del árbol. La vista de árbol familiar está siempre disponible.',
+                'View'                            => 'Vista',
+                'Tree'                            => 'Árbol',
+                'Fan'                             => 'Abanico',
+                'List'                            => 'Lista',
+                '%1$s is the %2$s of %3$s'        => '%1$s es %2$s de %3$s',
                 'Collapse'                        => 'Contraer',
                 'The tree is very large, so only part of it is shown. Select a person to see more of their branch.'
                                                   => 'El árbol es muy grande y se muestra solo una parte. Toca a una persona para ver más de su rama.',
@@ -250,7 +283,6 @@ final class ImprovedTreeModule extends AbstractModule implements
                 'Generations'                     => 'Generaciones',
                 'Generations before/after this person'
                                                   => 'Generaciones antes/después de esta persona',
-                'Show cousins of the main person' => 'Mostrar primos de la persona principal',
                 'The interactive tree needs JavaScript. You can still browse the records directly.'
                                                   => 'El árbol interactivo necesita JavaScript. Puedes seguir consultando las fichas directamente.',
                 'Open the record'                 => 'Abrir la ficha',
@@ -434,7 +466,22 @@ final class ImprovedTreeModule extends AbstractModule implements
 
     private function shellData(Tree $tree, Individual $individual): array
     {
+        // Vista «Lista»: enlace a la lista nativa de individuos de webtrees
+        // (si el módulo está activo para este árbol y usuario).
+        $list_url    = '';
+        $list_module = (new ModuleService())
+            ->findByComponent(ModuleListInterface::class, $tree, Auth::user())
+            ->first(static fn ($m): bool => $m instanceof IndividualListModule);
+        if ($list_module !== null) {
+            $list_url = $list_module->listUrl($tree);
+        }
+
         return [
+            'list_url'        => $list_url,
+            'enable_pedigree' => $this->preference('enable_pedigree') === '1',
+            'enable_fan'      => $this->preference('enable_fan') === '1',
+            'enable_list'     => $this->preference('enable_list') === '1',
+            'flip_limit'      => (int) $this->preference('flip_limit'),
             'individual' => $individual,
             'back_url'   => $individual->url(),
             'default_link_level'           => $this->defaultLinkLevel(),
@@ -460,6 +507,11 @@ final class ImprovedTreeModule extends AbstractModule implements
                 'module'  => $this->name(),
                 'action'  => 'Search',
                 'tree'    => $tree->name(),
+            ]),
+            'relationship_url' => route('module', [
+                'module' => $this->name(),
+                'action' => 'Relationship',
+                'tree'   => $tree->name(),
             ]),
             'tree_url'   => route('module', [
                 'module'  => $this->name(),
@@ -544,7 +596,7 @@ final class ImprovedTreeModule extends AbstractModule implements
         // (panel detail, edit forms) is not serialised behind graph builds.
         Session::save();
 
-        $mode                  = Validator::queryParams($request)->string('mode', $this->preference('default_mode'));
+        $mode                  = Validator::queryParams($request)->isInArray(self::ALLOWED_VIEWS)->string('mode', $this->preference('default_mode'));
         $ancestor_depth        = Validator::queryParams($request)->isBetween(self::MIN_DEPTH, self::MAX_DEPTH)->integer('ancestor_depth', (int) $this->preference('default_ancestor_depth'));
         $descendant_depth      = Validator::queryParams($request)->isBetween(self::MIN_DEPTH, self::MAX_DEPTH)->integer('descendant_depth', (int) $this->preference('default_descendant_depth'));
         $include_spouses       = Validator::queryParams($request)->boolean('include_spouses', (bool) (int) $this->preference('default_include_spouses'));
@@ -581,12 +633,15 @@ final class ImprovedTreeModule extends AbstractModule implements
             Auth::accessLevel($tree, $user),
             $is_editor ? (string) Auth::id() : '',
             $this->treeChangeStamp($tree),
+            // Los badges de cumpleaños/aniversario dependen del día de hoy.
+            date('Y-m-d'),
         ]);
 
         $graph = Registry::cache()->file()->remember(
             $cache_key,
             static function () use (
                 $individual,
+                $mode,
                 $ancestor_depth,
                 $descendant_depth,
                 $include_spouses,
@@ -599,6 +654,16 @@ final class ImprovedTreeModule extends AbstractModule implements
             ): array {
                 $builder = new GraphBuilder();
                 $builder->setPending($pending);
+
+                if ($mode === 'pedigree') {
+                    return $builder->buildPedigree(
+                        $individual,
+                        $ancestor_depth,
+                        $limit,
+                        $show_photos,
+                        $show_dates
+                    );
+                }
 
                 if ($link_level > 0) {
                     return $builder->buildGraphByLinks(
@@ -624,6 +689,12 @@ final class ImprovedTreeModule extends AbstractModule implements
             },
             self::GRAPH_CACHE_TTL
         );
+
+        // Total del árbol para el contador «X de Y personas» (COUNT barato,
+        // fuera de la caché del grafo para no atarlo a sus claves).
+        $graph['meta']['totalIndividuals'] = (int) DB::table('individuals')
+            ->where('i_file', '=', $tree->id())
+            ->count();
 
         // no-cache (not max-age): the browser must revalidate after every edit;
         // the server-side file cache absorbs the rebuild cost. private: the
@@ -660,6 +731,8 @@ final class ImprovedTreeModule extends AbstractModule implements
             Auth::accessLevel($tree, $user),
             Auth::isEditor($tree, $user) ? (string) Auth::id() : '',
             $this->treeChangeStamp($tree),
+            // La edad de los vivos cambia con la fecha.
+            date('Y-m-d'),
         ]);
 
         $detail = Registry::cache()->file()->remember(
@@ -670,6 +743,185 @@ final class ImprovedTreeModule extends AbstractModule implements
 
         return response($detail)
             ->withHeader('Cache-Control', 'private, no-cache');
+    }
+
+    /**
+     * Cadena de parentesco A→B («¿Qué parentesco tenemos?»): camino mínimo
+     * sobre la tabla `link` (patrón del chart de relaciones del core) con los
+     * nombres localizados por RelationshipService. Read-only, cacheado por
+     * idioma y nivel de acceso.
+     */
+    public function getRelationshipAction(ServerRequestInterface $request): ResponseInterface
+    {
+        $tree  = Validator::attributes($request)->tree();
+        $user  = Validator::attributes($request)->user();
+        $xref  = Validator::queryParams($request)->isXref()->string('xref');
+        $xref2 = Validator::queryParams($request)->isXref()->string('xref2');
+
+        Auth::checkComponentAccess($this, ModuleChartInterface::class, $tree, $user);
+
+        $from = Registry::individualFactory()->make($xref, $tree);
+        $from = Auth::checkIndividualAccess($from, false, true);
+        $to   = Registry::individualFactory()->make($xref2, $tree);
+        $to   = Auth::checkIndividualAccess($to, false, true);
+
+        // Read-only: liberar el write-lock de sesión (ver getGraphAction).
+        Session::save();
+
+        $cache_key = implode('|', [
+            'improved-tree-rel',
+            self::CUSTOM_VERSION,
+            $tree->id(),
+            $from->xref(),
+            $to->xref(),
+            I18N::languageTag(),
+            Auth::accessLevel($tree, $user),
+            Auth::isEditor($tree, $user) ? (string) Auth::id() : '',
+            $this->treeChangeStamp($tree),
+        ]);
+
+        $payload = Registry::cache()->file()->remember(
+            $cache_key,
+            fn (): array => $this->buildRelationship($from, $to),
+            self::GRAPH_CACHE_TTL
+        );
+
+        return response($payload)->withHeader('Cache-Control', 'private, no-cache');
+    }
+
+    /**
+     * Camino mínimo A→B sobre la tabla `link` (FAMS/FAMC), como el chart de
+     * relaciones del core pero solo con los caminos mínimos de Dijkstra.
+     *
+     * @return array<int, array<int, string>> caminos como xrefs INDI/FAM alternados
+     */
+    private function shortestLinkPaths(Individual $from, Individual $to): array
+    {
+        $rows = DB::table('link')
+            ->where('l_file', '=', $from->tree()->id())
+            ->whereIn('l_type', ['FAMS', 'FAMC'])
+            ->select(['l_from', 'l_to'])
+            ->get();
+
+        $graph = [];
+        foreach ($rows as $row) {
+            $graph[$row->l_from][$row->l_to] = 1;
+            $graph[$row->l_to][$row->l_from] = 1;
+        }
+
+        $dijkstra = new Dijkstra($graph);
+        $paths    = $dijkstra->shortestPaths($from->xref(), $to->xref());
+
+        // Dijkstra castea claves numéricas a int: volver a string SIEMPRE.
+        return array_map(
+            static fn (array $p): array => array_map(static fn ($x): string => (string) $x, $p),
+            $paths
+        );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildRelationship(Individual $from, Individual $to): array
+    {
+        $language = I18N::language();
+        $service  = new RelationshipService();
+
+        $none = [
+            'from'         => $this->kinStub($from),
+            'to'           => $this->kinStub($to),
+            'relationship' => '',
+            'phrase'       => '',
+            'steps'        => [],
+            'meta'         => ['pathCount' => 0],
+        ];
+
+        if ($from->xref() === $to->xref()) {
+            return array_merge($none, [
+                'relationship' => $service->nameFromPath([$from], $language),
+                'meta'         => ['pathCount' => 1],
+            ]);
+        }
+
+        $paths = $this->shortestLinkPaths($from, $to);
+
+        if ($paths === []) {
+            return $none;
+        }
+
+        $path = $paths[array_key_first($paths)];
+
+        // Materializar los nodos (INDI en pares, FAM en impares). Un link
+        // huérfano se trata como «sin parentesco», nunca como fatal.
+        $nodes = [];
+        foreach ($path as $i => $x) {
+            $rec = $i % 2 === 0
+                ? Registry::individualFactory()->make($x, $from->tree())
+                : Registry::familyFactory()->make($x, $from->tree());
+            if ($rec === null) {
+                return $none;
+            }
+            $nodes[] = $rec;
+        }
+
+        // Frase global: qué es B respecto de A, localizado por webtrees.
+        $relationship = $service->nameFromPath($nodes, $language);
+
+        $steps = [];
+        for ($i = 0, $n = count($nodes); $i < $n; $i += 2) {
+            $step = ['person' => $this->kinStub($nodes[$i])];
+            if ($i > 0) {
+                $step['rel'] = $service->nameFromPath(
+                    [$nodes[$i - 2], $nodes[$i - 1], $nodes[$i]],
+                    $language
+                );
+            }
+            $steps[] = $step;
+        }
+
+        $phrase = $relationship === '' ? '' : I18N::translate(
+            '%1$s is the %2$s of %3$s',
+            strip_tags($to->canShowName() ? $to->fullName() : '?'),
+            $relationship,
+            strip_tags($from->canShowName() ? $from->fullName() : '?')
+        );
+
+        return [
+            'from'         => $this->kinStub($from),
+            'to'           => $this->kinStub($to),
+            'relationship' => $relationship,
+            'phrase'       => $phrase,
+            'steps'        => $steps,
+            'meta'         => ['pathCount' => count($paths)],
+        ];
+    }
+
+    /**
+     * Stub privacy-aware para una tarjeta de la cadena de parentesco.
+     *
+     * @return array<string, mixed>
+     */
+    private function kinStub(Individual $individual): array
+    {
+        if (!$individual->canShowName()) {
+            return [
+                'xref'      => null,
+                'name'      => '?',
+                'sex'       => $individual->sex(),
+                'lifespan'  => null,
+                'thumbnail' => null,
+                'clickable' => false,
+            ];
+        }
+
+        return [
+            'xref'      => $individual->xref(),
+            'name'      => strip_tags($individual->fullName()),
+            'sex'       => $individual->sex(),
+            'lifespan'  => $this->lifespan($individual),
+            'thumbnail' => $individual->canShow() ? $this->portrait($individual) : null,
+            'clickable' => true,
+        ];
     }
 
     /**
@@ -939,6 +1191,22 @@ final class ImprovedTreeModule extends AbstractModule implements
         }
 
         $can_edit = $individual->canEdit();
+
+        // Edad actual (vivos) o al fallecer (muertos con fecha), para la
+        // cabecera del panel — como la muestra MyHeritage.
+        $birth = $individual->getBirthDate();
+        if ($birth->isOK()) {
+            $end = $individual->isDead()
+                ? $individual->getDeathDate()
+                : new Date(strtoupper(date('d M Y')));
+            if ($end->isOK()) {
+                $years = (new Age($birth, $end))->ageYears();
+                if ($years >= 0) {
+                    $detail['age']    = $years;
+                    $detail['isDead'] = $individual->isDead();
+                }
+            }
+        }
 
         $detail['canEdit']    = $can_edit;
         $detail['timeline']   = $this->buildTimeline($individual, $can_edit);
@@ -1333,6 +1601,10 @@ final class ImprovedTreeModule extends AbstractModule implements
         $this->setPreference('default_show_photos', $params->boolean('default_show_photos', false) ? '1' : '0');
         $this->setPreference('default_show_dates', $params->boolean('default_show_dates', false) ? '1' : '0');
         $this->setPreference('show_home_button', $params->boolean('show_home_button', false) ? '1' : '0');
+        $this->setPreference('enable_pedigree', $params->boolean('enable_pedigree', false) ? '1' : '0');
+        $this->setPreference('enable_fan', $params->boolean('enable_fan', false) ? '1' : '0');
+        $this->setPreference('enable_list', $params->boolean('enable_list', false) ? '1' : '0');
+        $this->setPreference('flip_limit', (string) $params->isBetween(0, 10000)->integer('flip_limit', 0));
         $this->setPreference('max_nodes_guest', (string) $params->isBetween(self::MIN_MAX_NODES_GUEST_USER, self::MAX_MAX_NODES_GUEST_USER)->integer('max_nodes_guest', 500));
         $this->setPreference('max_nodes_user', (string) $params->isBetween(self::MIN_MAX_NODES_GUEST_USER, self::MAX_MAX_NODES_GUEST_USER)->integer('max_nodes_user', 1000));
         $this->setPreference('max_nodes_admin', (string) $params->isBetween(self::MIN_MAX_NODES_ADMIN, self::MAX_MAX_NODES_ADMIN)->integer('max_nodes_admin', 2000));
