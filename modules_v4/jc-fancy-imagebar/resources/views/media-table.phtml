@@ -1,0 +1,127 @@
+<?php
+
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\Tree;
+use Fisharebest\Webtrees\View;
+use Fisharebest\Webtrees\Media;
+use Fisharebest\Webtrees\Registry;
+use Illuminate\Support\Collection;
+
+/**
+ * @var Collection<Media> $media_objects
+ * @var Tree              $tree
+ */
+
+$arr_media_xrefs = array();
+
+?>
+<!-- INFO-->
+<div class="alert alert-info alert-dismissible" role="alert">
+    <p class="small"><?= I18N::translate('Here you can choose which images should be shown in the Fancy Imagebar. If less images are selected than needed to fill the entire Fancy Imagebar, the images will be repeated.') ?></p>
+    <p class="small"><?= I18N::translate('Note: Only local “jpg” or “png” images are supported by this module. External images are not supported. It is not possible to keep transparency for png thumbnails in the Fancy Imagebar. Transparent png-thumbnails will get a black background. The images in this table already have the correct specifications.') ?></p>
+    <p class="small"><?= I18N::translate('The Fancy Imagebar module respects privacy settings!') ?></p>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="' . I18N::translate('close') . '"></button>
+</div>
+<!-- SELECT ALL -->
+<div class="col">
+    <?= view('components/checkbox', ['label' => I18N::translate('Select/unselect all'), 'name' => 'select-all']) ?>
+    <p class="small text-muted"><?= I18N::translate('Toggle this checkbox to select all images.') ?></p>
+</div>
+<table id="fancy-imagebar-media-table"
+    class="table table-bordered table-sm wt-table-media datatables d-none"
+    <?= view('lists/datatables-attributes') ?>
+    data-columns="<?= e(json_encode([
+        ['type' => 'html'],
+        ['visible' => false],
+        ['visible' => false]
+    ], JSON_THROW_ON_ERROR)) ?>"
+>
+    <caption class="sr-only">
+        <?= $caption ?? I18N::translate('Media objects') ?>
+    </caption>
+
+    <thead>
+        <tr>
+            <th><?= I18N::translate('Media') ?></th>
+            <th></th>
+            <th></th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <!-- Thumbnails-->
+        <?php foreach ($xrefs as $xref) : ?>
+            <?php $media = Registry::mediaFactory()->make($xref, $tree) ?>
+            <?php $i = 0 ?>
+            <?php foreach ($media->mediaFiles() as $media_file) : ?>
+                <?php $i++ ?>
+                <tr class="d-block float-start">
+                    <td>
+                    <?php
+                        $media_id = $xref. '[' . $i . ']';
+                        if ($media_list->isNotEmpty()) {
+                            $checked = $media_list->contains($media_id) ? 'checked' : '';
+                        } else {
+                            $checked = 'checked';
+                        }
+                        // Get list of media xrefs (for select all checkbox)
+                        $arr_media_xrefs[] = $media_id;
+                    ?>
+                    <?= $media_file->displayImage(100, 100, 'crop', ['data-toggle' => 'tooltip', 'data-placement' => 'top', 'title' => $media_file->title()]) ?>
+                    <div class="text-center"><?= view('components/checkbox-inline', ['label' => '', 'name' => 'media-checkbox', 'value' => $media_id, 'checked' => $checked]) ?></div>
+                    </td>
+                    <td><?= $media_id ?></td>
+                    <td><?= $media_file->title() ?></td>
+                </tr>
+            <?php endforeach ?>
+        <?php endforeach ?>
+    </tbody>
+</table>
+
+<?php $media_xrefs = implode(",", $arr_media_xrefs) ?>
+
+<?php View::push('javascript') ?>
+<script>
+    $("#fancy-imagebar-media-table").on('draw.dt', function() {
+        if ($("#media-list").val()) {
+            var images = $("#media-list").val().split(",");
+            $("input[type=checkbox]", this).each(function(){
+                if($.inArray($(this).val(), images) > -1){
+                    $(this).prop("checked", true);
+                } else {
+                    $(this).prop("checked", false);
+                }
+            });
+        } else {
+            $("input[type=checkbox]", this).prop('checked', true);
+            $('#media-list').val('<?= $media_xrefs ?>');
+        }
+    });
+
+    $('#fancy-imagebar-media-table').on("change", "input[type=checkbox]",function() {
+        var images = $("#media-list").val().split(",")
+        if(this.checked){
+            images.push($(this).val());
+        } else {
+            var index = images.indexOf($(this).val());
+            images.splice(index, 1 );
+        }
+
+        // remove empty values from array
+        images = images.filter(function(e){return e});
+
+        // turn array into a string
+        $('#media-list').val(images.join(","));
+    });
+
+    $('#select-all-1').change(function(e) {
+        if (e.currentTarget.checked) {
+            $('#media-list').val('<?= $media_xrefs ?>');
+            $('#fancy-imagebar-media-table input[type="checkbox"]').prop('checked', true);
+        } else {
+            $('#media-list').val("");
+            $('#fancy-imagebar-media-table input[type="checkbox"]').prop('checked', false);
+        }
+    });
+</script>
+<?php View::endpush() ?>

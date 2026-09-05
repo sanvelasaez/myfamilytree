@@ -2,7 +2,7 @@
 
 ## Project Identity
 
-This repository is a local webtrees installation used for a personal family-tree site.
+This repository (`webtrees-modules-pack`) is a pack of custom webtrees modules and themes. It is meant to be cloned into the root of any webtrees `2.2.x` installation: Git only tracks `modules_v4/` plus the root docs for AI agents (`AGENTS.md`, `CLAUDE.md`, `.agents/`). The webtrees core (`app/`, `vendor/`, `public/`, `resources/`, `data/`, `index.php`...) lives in the same working directory but is ignored via `.gitignore`, so references below to core paths describe the surrounding installation, not tracked files.
 
 - Application: webtrees, online collaborative genealogy.
 - Local version: `2.2.6`, confirmed in `app/Webtrees.php`.

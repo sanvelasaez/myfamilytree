@@ -1,0 +1,46 @@
+<?php
+
+use Fisharebest\Webtrees\Auth;
+use Fisharebest\Webtrees\I18N;
+use JustCarmen\Webtrees\Internationalization\MoreI18N;
+
+/**
+ * @var \JustCarmen\Webtrees\Module\FancyTreeview\FancyTreeviewModule $module
+ * @var \Fisharebest\Webtrees\Tree $tree
+ * @var string $xref
+ * @var int $current_page
+ * @var int $total_pages
+ * @var string|int $show_all_link
+ */
+
+?>
+
+<nav aria-label="jc-page-navigation">
+    <ul class="pagination justify-content-center pt-3 d-print-none">
+        <li class="page-item<?= $current_page === 1 ? ' disabled' : '' ?>">
+            <a class="page-link" href="<?= $module->getUrl($tree, $xref, '', $current_page - 1) ?>" tabindex="-1" aria-disabled="<?= $current_page === 1 ? 'true' : 'false' ?>">
+                <?= MoreI18N::xlate('previous') ?>
+            </a>
+        </li>
+        <?php for ($page = 1; $page <= $total_pages; $page++) : ?>
+            <li <?= $page === $current_page ? 'class="page-item active" aria-current="page"' : 'class="page-item"' ?>>
+                <a class="page-link" href="<?= $module->getUrl($tree, $xref, '', $page) ?>"><?= $page ?></a>
+            </li>
+        <?php endfor ?>
+        <li class="page-item<?= $current_page === $total_pages ? ' disabled' : '' ?>">
+            <a class="page-link" href="<?= $module->getUrl($tree, $xref, '', $current_page + 1) ?>" tabindex="-1" aria-disabled="<?= $current_page === $total_pages ? 'true' : 'false' ?>">
+                <?= MoreI18N::xlate('next') ?>
+            </a>
+        </li>
+    </ul>
+    <?php
+    $access_level = Auth::accessLevel($tree);
+    if ($show_all_link >= $access_level):
+    ?>
+    <div class="text-center">
+        <a class="link-primary" href="<?= $module->getUrl($tree, $xref, '', 0) ?>" title="<?= I18N::translate('Useful for printing the page or saving as a PDF.') . "\n" . I18N::translate('Note: showing all generations at once can take a while.') ?>">
+            <?= I18N::translate('show all generations') ?>
+        </a>
+    </div>
+    <?php endif ?>
+</nav>

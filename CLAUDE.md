@@ -10,7 +10,8 @@ AGENTS.md
 
 Summary:
 
-- webtrees `2.2.6` local installation.
+- This repo is `webtrees-modules-pack`: only `modules_v4/` and the root agent docs are tracked.
+- It is cloned into the root of a webtrees `2.2.x` installation; the core files are present on disk but ignored by Git.
 - Custom site work belongs in `modules_v4/`.
 - Do not edit upstream core unless explicitly asked.
 - See `AGENTS.md` for module/plugin development notes and external research links.

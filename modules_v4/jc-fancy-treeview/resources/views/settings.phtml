@@ -1,0 +1,364 @@
+<?php
+
+use Fisharebest\Webtrees\Auth;
+use Fisharebest\Webtrees\Http\RequestHandlers\ControlPanel;
+use Fisharebest\Webtrees\I18N;
+use Fisharebest\Webtrees\View;
+use JustCarmen\Webtrees\Internationalization\MoreI18N;
+
+/**
+ * @var string $title
+ * @var string $list_type
+ * @var int $page_limit
+ * @var int $tab_limit
+ * @var string $show_all_link
+ * @var bool|int $show_singles
+ * @var bool|int $check_relationship
+ * @var string $thumb_size
+ * @var bool|int $crop_thumbs
+ * @var bool|int $media_type_photo
+ * @var string $places_format
+ * @var string $places_format_hc
+ * @var string $places_format_oc
+ * @var string $countries_format
+ * @var bool|int $show_home_country
+ * @var string $home_country
+ * @var array $country_list
+ * @var bool|int $show_occupations
+ * @var bool|int $show_agencies
+ * @var bool|int $gedcom_occupation
+ * @var bool|int $show_death_cause
+ * @var bool|int $level1_notes
+ */
+
+?>
+
+<?= view('components/breadcrumbs', ['links' => [route(ControlPanel::class) => MoreI18N::xlate('Control panel'), $title]]) ?>
+
+<h1><?= $title ?></h1>
+
+<div class="jc-fancy-treeview mb-5">
+    <form method="post">
+        <?= csrf_field() ?>
+        <input type="hidden" name="save" id="save" value="1">
+        <h2><?= MoreI18N::xlate('General') ?></h2>
+        <!-- DEFAULT PAGE TYPE-->
+        <div class="row mb-3">
+            <label class="col-form-label col-sm-3">
+                <?= I18N::translate('Default list type') ?>
+            </label>
+            <div class="col-sm-3">
+                <?= view('components/select', ['name' => 'list-type', 'selected' => $list_type, 'options' => ['descendants' => MoreI18N::xlate('Descendants'), 'ancestors' => MoreI18N::xlate('Ancestors')]]) ?>
+            </div>
+            <div class="form-text col-sm-9 offset-sm-3">
+                <?= /* I18N: Help text for the “Default list type” configuration setting */
+                I18N::translate('Select “descendants” or “ancestors” as default list type. When on the individual page tab, this list type will be shown first.');
+                ?>
+            </div>
+
+        </div>
+        <!-- PAGE LIMIT -->
+        <div class="row mb-3">
+            <label class="col-form-label col-sm-3">
+                <?= I18N::translate('Maximum number of generations per page') ?>
+            </label>
+            <div class="col-sm-1">
+                <?= view('components/select', ['name' => 'page-limit', 'selected' => $page_limit, 'options' => array_combine(range(1,20), range(1, 20))]) ?>
+            </div>
+            <div class="form-text col-sm-9 offset-sm-3">
+                <?= /* I18N: Help text for the “Maximum number of generations per page” configuration setting */
+                I18N::translate('Select the maximum number of generations to show on the Fancy Treeview page.');
+                ?>
+                <?= I18N::translate('More generations require more memory so the page takes longer to fully load.'); ?>
+            </div>
+
+        </div>
+        <!-- TAB LIMIT -->
+        <div class="row mb-3">
+            <label class="col-form-label col-sm-3">
+                <?= I18N::translate('Maximum number of generations per tab') ?>
+            </label>
+            <div class="col-sm-1">
+                <?= view('components/select', ['name' => 'tab-limit', 'selected' => $tab_limit, 'options' => array_combine(range(1,20), range(1, 20))]) ?>
+            </div>
+            <div class="form-text col-sm-9 offset-sm-3">
+                <?= /* I18N: Help text for the “Maximum number of generations per tab” configuration setting */
+                I18N::translate('Select the maximum number of generations to show on the individual page tab.');
+                ?>
+                <?= I18N::translate('More generations require more memory so the page takes longer to fully load.'); ?>
+            </div>
+        </div>
+         <!-- SHOW LINK TO OPEN ALL GENERATIONS ON ONE PAGE -->
+        <fieldset class="mb-3">
+            <div class="row">
+                <legend class="col-form-label col-sm-3">
+                    <?= I18N::translate('Show link to open all generations on one page') ?>
+                </legend>
+                <div class="col-sm-3">
+                    <?= view('components/select', ['name' => 'show-all-link', 'selected' => $show_all_link, 'options' => Auth::accessLevelNames()]) ?>
+                </div>
+                <div class="form-text col-sm-9 offset-sm-3">
+                    <?= /* I18N: Help text for the "Show link to open all generations on one page" configuration setting */
+                    I18N::translate('Add a link at the bottom of the page that opens all generations on one page. This is useful for printing or saving the page as a PDF using the browser\'s default print function. Select the minimum required role to display the link.');
+                    ?>
+                </div>
+            </div>
+        </fieldset>
+        <!-- SHOW SINGLES -->
+        <fieldset class="mb-3">
+            <div class="row">
+                <legend class="col-form-label col-sm-3">
+                    <?= I18N::translate('Show singles') ?>
+                </legend>
+                <div class="col-sm-9">
+                    <?= view('components/radios-inline', ['name' => 'show-singles', 'options' => [MoreI18N::xlate('no'), MoreI18N::xlate('yes')], 'selected' => (int) $show_singles]) ?>
+                    <div class="form-text">
+                        <?= I18N::translate('This setting only applies to the page or tab containing the descendants.') ?>
+                        <?= /* I18N: Help text for the “Show singles” configuration setting */
+                        I18N::translate('Respond “yes” if you want to display singles in the next generation.' .
+                            ' Singles are individuals without a partner and children. If you choose “yes”, each child of a family will be displayed' .
+                            ' in a detailed manner in the next generation.')
+                        ?>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+        <!-- CHECK RELATIONSHIP BETWEEN PARTNERS -->
+        <fieldset class="mb-3">
+            <div class="row">
+                <legend class="col-form-label col-sm-3">
+                    <?= I18N::translate('Check relationship between partners') ?>
+                </legend>
+                <div class="col-sm-9">
+                    <?= view('components/radios-inline', ['name' => 'check-relationship', 'options' => [MoreI18N::xlate('no'), MoreI18N::xlate('yes')], 'selected' => (int) $check_relationship]) ?>
+                    <div class="form-text">
+                        <?= /* I18N: Help text for the “Check relationship between partners” configuration setting */
+                        I18N::translate('If the answer is “yes”, the script checks whether a (married) couple has the same ancestors. ' .
+                            'If a relationship between the partners is found, the display depends on the display type.');
+                        ?>
+                        <ul>
+                            <li><?= I18N::translate('in the descendants view: a text will appear between brackets after the spouses’ name to indicate the blood relationship.') ?></li>
+                            <li><?= I18N::translate('in the ancestors view: each generation shows the number of people and the maximum number of possible ancestors in that generation. ' .
+                                    'The number of possible ancestors in subsequent generations is recalculated in case of pedigree collapse.') ?></li>
+                        </ul>
+                    </div>
+                    <div class="form-text">
+                        <?= /* I18N: Warning when using the “Check relationship between partners” configuration setting */
+                        I18N::translate('<strong>Note</strong>: this option can be time and/or memory consuming, especially on large trees.' .
+                            ' It can cause very slow page loading or an “execution time out error” on your server. If you notice such a behavior,' .
+                            ' reduce the maximum number of generations per page or tab and/or don’t use it in combination with the option “show singles’.' .
+                            ' If you still have problems, leave the answer at “no”.')
+                        ?>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+        <h2><?= MoreI18N::xlate('Media') ?></h2>
+        <!-- THUMBNAIL SIZE -->
+        <div class="row mb-3">
+            <label class="col-form-label col-sm-3">
+                <?= I18N::translate('Thumbnail size') ?>
+            </label>
+            <div class="col-auto">
+                <input class="form-control" type="text" name="thumb-size" size="3" value="<?= $thumb_size ?>" required>
+            </div>
+            <div class="col-auto align-self-center">px</div>
+        </div>
+        <!-- CROP THUMBNAILS TO SQUARE -->
+        <fieldset class="mb-3">
+            <div class="row">
+                <legend class="col-form-label col-sm-3">
+                    <?= I18N::translate('Crop thumbnails to square') ?>
+                </legend>
+                <div class="col-sm-9">
+                    <?= view('components/radios-inline', ['name' => 'crop-thumbs', 'options' => [MoreI18N::xlate('no'), MoreI18N::xlate('yes')], 'selected' => (int) $crop_thumbs]) ?>
+                </div>
+            </div>
+        </fieldset>
+        <!-- MEDIA TYPE PHOTO -->
+        <fieldset class="mb-3">
+            <div class="row">
+                <legend class="col-form-label col-sm-3">
+                    <?= I18N::translate('Show only media from the type \'photo\'') ?>
+                </legend>
+                <div class="col-sm-9">
+                    <?= view('components/radios-inline', ['name' => 'media-type-photo', 'options' => [MoreI18N::xlate('no'), MoreI18N::xlate('yes')], 'selected' => (int) $media_type_photo]) ?>
+                    <div class="form-text">
+                        <?= /* I18N: Help text for the “Show only media from the type 'photo'” configuration setting */
+                        I18N::translate('Respond “yes” if you want to display images from the type “photo” only.' .
+                            ' Other highlighted images like certificates, documents or tombstones will not be used.' .
+                            ' If you did not differentiate by media type in your Gedcom leave the answer at “no”.')
+                        ?>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+        <h2><?= MoreI18N::xlate('Places') ?></h2>
+        <!-- PLACE NAMES FORMAT-->
+        <div class="row mb-3">
+            <label class="col-form-label col-sm-3">
+                <?= I18N::translate('Preference for displaying place names') ?>
+            </label>
+            <div class="col-sm-3">
+                <?= view('components/select', ['name' => 'places-format', 'selected' => $places_format, 'options' => [
+                    'custom'        => I18N::translate('Customized'),
+                    'webtrees'      => I18N::translate('As defined in webtrees'),
+                    'none'          => I18N::translate('Don\'t show place names')
+                ]]) ?>
+            </div>
+        </div>
+        <!-- HOME COUNTRY FORMAT-->
+        <div class="row mb-3 jc-group1 collapse <?= $places_format === 'custom' ? 'show' : '' ?>">
+            <label class="col-form-label col-sm-3">
+                <?= I18N::translate('Preference for displaying place names in home country') ?>
+            </label>
+            <div class="col-sm-3">
+                <?= view('components/select', ['name' => 'places-format-hc', 'selected' => $places_format_hc, 'options' => [
+                    'full'     => I18N::translate('Full place name'),
+                    'highlow'  => I18N::translate('Highest and lowest level'),
+                    'low'      => I18N::translate('Lowest level')
+                ]]) ?>
+            </div>
+        </div>
+        <!-- OTHER COUNTRIES FORMAT-->
+        <div class="row mb-3 jc-group1 collapse <?= $places_format === 'custom' ? 'show' : '' ?>">
+            <label class="col-form-label col-sm-3">
+                <?= I18N::translate('Preference for displaying place names in other countries') ?>
+            </label>
+            <div class="col-sm-3">
+                <?= view('components/select', ['name' => 'places-format-oc', 'selected' => $places_format_oc, 'options' => [
+                    'full'     => I18N::translate('Full place name'),
+                    'highlow'  => I18N::translate('Highest and lowest level')
+                ]]) ?>
+            </div>
+        </div>
+        <!-- COUNTRY FORMAT-->
+        <div class="row mb-3 jc-group2 collapse <?= $places_format === 'none' ? '' : 'show' ?>">
+            <label class="col-form-label col-sm-3">
+                <?= I18N::translate('Preference for displaying countries') ?>
+            </label>
+            <div class="col-sm-3">
+                <?= view('components/select', ['name' => 'countries-format', 'selected' => $countries_format, 'options' => [
+                    'full'          => I18N::translate('Full country name'),
+                    'iso3'          => I18N::translate('3 letter country code'),
+                    'iso2'          => I18N::translate('2 letter country code')
+                ]]) ?>
+            </div>
+        </div>
+        <!-- HOME COUNTRY FORMAT-->
+        <fieldset class="mb-3 jc-group2 collapse <?= $places_format === 'none' ? '' : 'show' ?>">
+            <div class="row">
+                <legend class="col-form-label col-sm-3">
+                    <?= I18N::translate('Display home country name') ?>
+                </legend>
+                <div class="col-sm-9">
+                    <?= view('components/radios-inline', ['name' => 'show-home-country', 'options' => [MoreI18N::xlate('no'), MoreI18N::xlate('yes')], 'selected' => (int) $show_home_country]) ?>
+                </div>
+            </div>
+        </fieldset>
+        <!-- HOME COUNTRY-->
+        <fieldset class="mb-3 jc-group2 collapse <?= $places_format === 'none' ? '' : 'show' ?>">
+            <div class="row">
+                <legend class="col-form-label col-sm-3">
+                    <?= I18N::translate('Home country') ?>
+                </legend>
+                <div class="col-sm-3">
+                    <?= view('components/select', ['name' => 'home-country', 'selected' => $home_country, 'options' => $country_list]) ?>
+                </div>
+            </div>
+        </fieldset>
+        <h2><?= MoreI18N::xlate('Occupations') ?></h2>
+         <!-- SHOW OCCUPATIONS -->
+         <fieldset class="mb-3">
+            <div class="row">
+                <legend class="col-form-label col-sm-3">
+                    <?= I18N::translate('Show occupations') ?>
+                </legend>
+                <div class="col-sm-9">
+                    <?= view('components/radios-inline', ['name' => 'show-occupations', 'options' => [MoreI18N::xlate('no'), MoreI18N::xlate('yes')], 'selected' => (int) $show_occupations]) ?>
+                </div>
+            </div>
+        </fieldset>
+         <!-- SHOW COMPANY/EMPLOYER -->
+         <fieldset class="mb-3">
+            <div class="row">
+                <legend class="col-form-label col-sm-3">
+                    <?= I18N::translate('Show the name of the company/employer') ?>
+                </legend>
+                <div class="col-sm-9">
+                    <?= view('components/radios-inline', ['name' => 'show-agencies', 'options' => [MoreI18N::xlate('no'), MoreI18N::xlate('yes')], 'selected' => (int) $show_agencies]) ?>
+                    <div class="form-text">
+                        <?= /* I18N: Help text for the “Show company/employer” configuration setting */
+                        I18N::translate('Answer "yes" if you want to display the name of the company/employer (Gedcom-tag "AGNC") with the occupation. The text is displayed only in conjunction with the occupation.');
+                        ?>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+        <!-- SPELLING OF OCCUPATION -->
+        <fieldset class="mb-3">
+            <div class="row">
+                <legend class="col-form-label col-sm-3">
+                    <?= I18N::translate('Always write the occupation exactly as it appears in the Gedcom') ?>
+                </legend>
+                <div class="col-sm-9">
+                    <?= view('components/radios-inline', ['name' => 'gedcom-occupation', 'options' => [MoreI18N::xlate('no'), MoreI18N::xlate('yes')], 'selected' => (int) $gedcom_occupation]) ?>
+                    <div class="form-text">
+                        <?= /* I18N: Help text for the “Show only media from the type 'photo'” configuration setting */
+                        I18N::translate('In the Gedcom file, the first letter of most occupations is capitalized (as stand-alone word)' .
+                            ' but in this module we use the occupation in the middle of a sentence. The spelling rules in most languages' .
+                            ' require that an occupation be written in lower case in that situation.' .
+                            ' If you do not want the module to change the spelling, change the answer to “yes”.')
+                        ?>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+        <h2><?= MoreI18N::xlate('Other') ?></h2>
+        <!-- SHOW CAUSE OF DEATH -->
+        <fieldset class="mb-3">
+            <div class="row">
+                <legend class="col-form-label col-sm-3">
+                    <?= I18N::translate('Show cause of death') ?>
+                </legend>
+                <div class="col-sm-9">
+                    <?= view('components/radios-inline', ['name' => 'show-death-cause', 'options' => [MoreI18N::xlate('no'), MoreI18N::xlate('yes')], 'selected' => (int) $show_death_cause]) ?>
+                </div>
+            </div>
+        </fieldset>
+        <!-- SHOW LEVEL 1 NOTES -->
+        <fieldset class="mb-3">
+            <div class="row">
+                <legend class="col-form-label col-sm-3">
+                    <?= I18N::translate('Show level 1 notes') ?>
+                </legend>
+                <div class="col-sm-9">
+                    <?= view('components/radios-inline', ['name' => 'level1-notes', 'options' => [MoreI18N::xlate('no'), MoreI18N::xlate('yes')], 'selected' => (int) $level1_notes]) ?>
+                </div>
+            </div>
+        </fieldset>
+        <!-- SAVE BUTTON -->
+        <hr />
+        <button type="submit" class="btn btn-primary">
+            <?= view('icons/save') ?>
+            <?= MoreI18N::xlate('save') ?>
+        </button>
+    </form>
+</div>
+
+<?php View::push('javascript') ?>
+<script>
+    $('#places-format').on('change', function() {
+        if ($(this).find(":selected").val() == 'custom') {
+            $('.jc-group1.collapse').collapse('show');
+        } else {
+            $('.jc-group1.collapse').collapse('hide');
+        }
+        if ($(this).find(":selected").val() == 'none') {
+            $('.jc-group2.collapse').collapse('hide');
+        } else {
+            $('.jc-group2.collapse').collapse('show');
+        }
+    });
+</script>
+<?php View::endpush() ?>
