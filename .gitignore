@@ -1,14 +1,2 @@
-# Este repositorio solo versiona el pack de módulos y la documentación para agentes IA.
-# Se clona en la raíz de una instalación webtrees, cuyo core (app/, vendor/, public/,
-# resources/, data/, index.php...) queda fuera del control de versiones.
-/*
-!/.gitignore
-!/.gitattributes
-!/AGENTS.md
-!/CLAUDE.md
-!/README.md
-!/.agents/
-!/modules_v4/
-
 # Configuración local de Claude Code
 /.claude/

@@ -1,27 +1,35 @@
 # webtrees-modules-pack
 
 Pack de módulos y temas personalizados para [webtrees](https://webtrees.net) `2.2.x`.
+La raíz de este repositorio se corresponde con la carpeta `modules_v4/` de una instalación webtrees.
 
 ## Contenido
 
-- `modules_v4/argon-sanvelasaez` — tema basado en Argon.
-- `modules_v4/better-webtrees-forms` — mejoras en formularios.
-- `modules_v4/improved-tree` — árbol interactivo multidioma.
-- `modules_v4/kripton` — tema Kripton.
+- `argon-sanvelasaez/` — tema basado en Argon.
+- `better-webtrees-forms/` — mejoras en formularios.
+- `improved-tree/` — árbol interactivo multidioma.
+- `kripton/` — tema Kripton.
 - `AGENTS.md`, `CLAUDE.md`, `.agents/` — guías para agentes de IA que trabajen sobre el pack.
+- `WEBTREES-MODULES-NOTES.md` — notas upstream de webtrees sobre la carpeta `modules_v4`.
 
 ## Instalación
 
-Clonar el repositorio directamente en la raíz de una instalación webtrees existente:
+Clonar el repositorio como carpeta `modules_v4` de una instalación webtrees existente:
 
 ```bash
 cd /ruta/a/webtrees
-git init            # si la instalación aún no es un repositorio
+mv modules_v4 modules_v4.bak   # si ya existe y quieres conservarla
+git clone https://github.com/sanvelasaez/webtrees-modules-pack.git modules_v4
+```
+
+O, si `modules_v4` ya contiene otros módulos que quieres mantener:
+
+```bash
+cd /ruta/a/webtrees/modules_v4
+git init
 git remote add origin https://github.com/sanvelasaez/webtrees-modules-pack.git
 git fetch origin
 git checkout -f main
 ```
-
-El `.gitignore` está en modo lista blanca: solo `modules_v4/` y los documentos raíz quedan bajo control de versiones; el core de webtrees permanece en disco sin ser rastreado.
 
 Después, activar los módulos en **Panel de control → Módulos**.

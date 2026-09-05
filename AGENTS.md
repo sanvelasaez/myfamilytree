@@ -2,7 +2,7 @@
 
 ## Project Identity
 
-This repository (`webtrees-modules-pack`) is a pack of custom webtrees modules and themes. It is meant to be cloned into the root of any webtrees `2.2.x` installation: Git only tracks `modules_v4/` plus the root docs for AI agents (`AGENTS.md`, `CLAUDE.md`, `.agents/`). The webtrees core (`app/`, `vendor/`, `public/`, `resources/`, `data/`, `index.php`...) lives in the same working directory but is ignored via `.gitignore`, so references below to core paths describe the surrounding installation, not tracked files.
+This repository (`webtrees-modules-pack`) is a pack of custom webtrees modules and themes. Its root is the `modules_v4/` folder of a webtrees `2.2.x` installation: clone it as `modules_v4` inside any webtrees. The webtrees core (`app/`, `vendor/`, `public/`, `resources/`, `data/`, `index.php`...) lives one level up and is not part of this repository, so references below to `modules_v4/...` or core paths describe the surrounding installation seen from the webtrees root.
 
 - Application: webtrees, online collaborative genealogy.
 - Local version: `2.2.6`, confirmed in `app/Webtrees.php`.
@@ -22,7 +22,7 @@ This repository (`webtrees-modules-pack`) is a pack of custom webtrees modules a
 - The external example has `composer.json`, `package.json`, `webpack.config.js`, `src/`, `resources/`, `module.php` and `KriptonTheme.php`.
 - In the external example, `npm run dev` runs `webpack --watch` and syncs PHP files, views and compiled assets into `..\webtrees\modules_v4\kripton`.
 - In the external example, `npm run build` runs vendor install, lint and production webpack output into `dist/`.
-- `modules_v4/README.md` contains the upstream webtrees module notes, but terminal output may show mojibake for smart quotes. Keep new docs ASCII unless there is a reason to use Unicode.
+- `WEBTREES-MODULES-NOTES.md` (repo root, formerly `modules_v4/README.md`) contains the upstream webtrees module notes, but terminal output may show mojibake for smart quotes. Keep new docs ASCII unless there is a reason to use Unicode.
 
 ## External Research Notes
 
