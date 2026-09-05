@@ -1,0 +1,850 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: improved-tree\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: es\n"
+
+msgid "%1 of %2 people"
+msgstr "%1 de %2 personas"
+
+msgid "%1$s is the %2$s of %3$s"
+msgstr "%1$s es %2$s de %3$s"
+
+msgid "%s years old"
+msgstr "%s años"
+
+msgid "Add"
+msgstr "Añadir"
+
+msgid "Add a father or mother first; siblings are added to the parents’ family."
+msgstr "Añade primero un padre o una madre; los hermanos se añaden a la familia de los padres."
+
+msgid "Add child"
+msgstr "Añadir hijo/a"
+
+msgid "Add event"
+msgstr "Añadir evento"
+
+msgid "Add fact"
+msgstr "Añadir dato"
+
+msgid "Add father"
+msgstr "Añadir padre"
+
+msgid "Add father/mother"
+msgstr "Añadir padre/madre"
+
+msgid "Add image"
+msgstr "Añadir imagen"
+
+msgid "Add individual"
+msgstr "Añadir individuo"
+
+msgid "Add mother"
+msgstr "Añadir madre"
+
+msgid "Add relative"
+msgstr "Añadir familiar"
+
+msgid "Add relatives"
+msgstr "Añadir familiares"
+
+msgid "Add sibling"
+msgstr "Añadir hermano/a"
+
+msgid "Add spouse"
+msgstr "Añadir cónyuge"
+
+msgid "Add the missing spouse"
+msgstr "Añadir el cónyuge que falta"
+
+msgid "Add your family"
+msgstr "Añade a tu familia"
+
+msgid "Adds a button to the main menu (shown on the home page and everywhere else) that opens the full-screen tree, rooted on the tree’s default individual."
+msgstr "Añade un botón al menú principal (visible en la página de inicio y en el resto) que abre el árbol a pantalla completa, con el individuo por defecto del árbol como raíz."
+
+msgid "Also appears in another branch"
+msgstr "Aparece también en otra rama"
+
+msgid "Also grandparents and grandchildren"
+msgstr "También abuelos y nietos"
+
+msgid "Animation card limit"
+msgstr "Límite de tarjetas animadas"
+
+msgid "Approve"
+msgstr "Aprobar"
+
+msgid "Approving…"
+msgstr "Aprobando…"
+
+msgid "Back"
+msgstr "Atrás"
+
+msgid "Baptism"
+msgstr "Bautismo"
+
+msgid "Birth"
+msgstr "Nacimiento"
+
+msgid "Birthday coming up!"
+msgstr "¡Cumpleaños a la vista!"
+
+msgid "Blue is a man, pink is a woman, and gold marks the selected person. Dashed cards are people not yet recorded."
+msgstr "Azul es hombre, rosa es mujer y el dorado marca a la persona elegida. Las tarjetas punteadas son personas aún sin registrar."
+
+msgid "Both parents already exist — this will create a second family for this person."
+msgstr "Ya existen ambos padres: se creará una segunda familia para esta persona."
+
+msgid "Both parents already exist. To link another parent, edit the family in webtrees."
+msgstr "Ya existen ambos padres. Para enlazar otro progenitor usa la edición nativa de webtrees."
+
+msgid "Brother"
+msgstr "Hermano"
+
+msgid "Burial"
+msgstr "Entierro"
+
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgid "Center on the selected person"
+msgstr "Centrar en la persona seleccionada"
+
+msgid "Center the fan on this person"
+msgstr "Centrar el abanico en esta persona"
+
+msgid "Change"
+msgstr "Cambiar"
+
+msgid "Change approved"
+msgstr "Cambio aprobado"
+
+msgid "Child"
+msgstr "Hijo/a"
+
+msgid "Children"
+msgstr "Hijos"
+
+msgid "Choose a file"
+msgstr "Elegir archivo"
+
+msgid "Choose a person first."
+msgstr "Elige primero a una persona."
+
+msgid "Choose an image file first."
+msgstr "Elige primero un archivo de imagen."
+
+msgid "Choose generations manually…"
+msgstr "Elegir generaciones a mano…"
+
+msgid "Choose month and year"
+msgstr "Elegir mes y año"
+
+msgid "Christening"
+msgstr "Bautizo"
+
+msgid "Close"
+msgstr "Cerrar"
+
+msgid "Close family only"
+msgstr "Solo la familia cercana"
+
+msgid "Collapse"
+msgstr "Contraer"
+
+msgid "Continue"
+msgstr "Continuar"
+
+msgid "Could not load information."
+msgstr "No se pudo cargar la información."
+
+msgid "Could not load the edit data. Try again."
+msgstr "No se pudieron cargar los datos de edición. Inténtalo de nuevo."
+
+msgid "Create individual"
+msgstr "Crear individuo"
+
+msgid "Cremation"
+msgstr "Cremación"
+
+msgid "Custom event"
+msgstr "Evento personalizado"
+
+msgid "Custom fact"
+msgstr "Dato personalizado"
+
+msgid "Date"
+msgstr "Fecha"
+
+msgid "Daughter"
+msgstr "Hija"
+
+msgid "Death"
+msgstr "Fallecimiento"
+
+msgid "Default ancestor depth"
+msgstr "Profundidad de ascendientes por defecto"
+
+msgid "Default descendant depth"
+msgstr "Profundidad de descendientes por defecto"
+
+msgid "Default kinship level"
+msgstr "Nivel de parentesco por defecto"
+
+msgid "Defaults"
+msgstr "Valores por defecto"
+
+msgid "Delete"
+msgstr "Eliminar"
+
+msgid "Delete individual"
+msgstr "Eliminar individuo"
+
+msgid "Delete person"
+msgstr "Eliminar persona"
+
+msgid "Delete relationship"
+msgstr "Eliminar relación"
+
+msgid "Details"
+msgstr "Datos"
+
+msgid "Died at age %s"
+msgstr "Falleció a los %s años"
+
+msgid "Direct family"
+msgstr "Familia directa"
+
+msgid "Discard the changes?"
+msgstr "¿Descartar los cambios?"
+
+msgid "Divorced"
+msgstr "Divorciados"
+
+msgid "Done"
+msgstr "Listo"
+
+msgid "Drag the background with your finger or the mouse to travel through your family."
+msgstr "Arrastra el fondo con el dedo o con el ratón para recorrer a tu familia."
+
+msgid "Edit"
+msgstr "Editar"
+
+msgid "Edit individual"
+msgstr "Editar individuo"
+
+msgid "Edit relationship"
+msgstr "Editar relación"
+
+msgid "Education"
+msgstr "Educación"
+
+msgid "Enlarge photo"
+msgstr "Ampliar foto"
+
+msgid "Enter at least a given name or a surname."
+msgstr "Escribe al menos el nombre o los apellidos."
+
+msgid "Events"
+msgstr "Eventos"
+
+msgid "Everything possible (level %s)"
+msgstr "Todo lo posible (nivel %s)"
+
+msgid "Explore your family tree"
+msgstr "Explora tu árbol genealógico"
+
+msgid "Extended family (uncles, aunts and cousins)"
+msgstr "Familia extensa (tíos y primos)"
+
+msgid "Family"
+msgstr "Familia"
+
+msgid "Fan"
+msgstr "Abanico"
+
+msgid "Fan view"
+msgstr "Vista de abanico"
+
+msgid "Father"
+msgstr "Padre"
+
+msgid "Father/Mother"
+msgstr "Padre/Madre"
+
+msgid "Female"
+msgstr "Mujer"
+
+msgid "File"
+msgstr "Archivo"
+
+msgid "Fill in at least one field."
+msgstr "Rellena al menos un campo."
+
+msgid "Find someone"
+msgstr "Encuentra a alguien"
+
+msgid "Forward"
+msgstr "Adelante"
+
+msgid "Full screen: pan, zoom and jump between relatives."
+msgstr "A pantalla completa: desplázate, amplía y salta entre familiares."
+
+msgid "Fullscreen"
+msgstr "Pantalla completa"
+
+msgid "Gallery"
+msgstr "Galería"
+
+msgid "Generations"
+msgstr "Generaciones"
+
+msgid "Generations before/after this person"
+msgstr "Generaciones antes/después de esta persona"
+
+msgid "Generations down (descendants)"
+msgstr "Generaciones hacia abajo (descendientes)"
+
+msgid "Generations of ancestors"
+msgstr "Generaciones de ascendientes"
+
+msgid "Generations up (ancestors)"
+msgstr "Generaciones hacia arriba (antepasados)"
+
+msgid "Given names"
+msgstr "Nombre"
+
+msgid "Hide this branch"
+msgstr "Ocultar esta rama"
+
+msgid "Home page"
+msgstr "Página de inicio"
+
+msgid "How are we related?"
+msgstr "¿Qué parentesco tenemos?"
+
+msgid "How much family to show"
+msgstr "¿Cuánta familia mostrar?"
+
+msgid "How to use the tree"
+msgstr "Cómo se usa el árbol"
+
+msgid "Husband"
+msgstr "Marido"
+
+msgid "Image upload is not available."
+msgstr "La subida de imágenes no está disponible."
+
+msgid "Improved tree of %s"
+msgstr "Árbol interactivo de %s"
+
+msgid "Include siblings by default"
+msgstr "Incluir hermanos por defecto"
+
+msgid "Include spouses by default"
+msgstr "Incluir cónyuges por defecto"
+
+msgid "Information restricted for privacy."
+msgstr "Información restringida por privacidad."
+
+msgid "Interactive family tree"
+msgstr "Árbol genealógico interactivo"
+
+msgid "Interactive tree"
+msgstr "Árbol interactivo"
+
+msgid "Invalid date. Use dd/mm/yyyy, just the year (1900), or \"about 1900\", \"before 1900\", \"after 1900\"."
+msgstr "Fecha no válida. Usa dd/mm/aaaa, solo el año (1900), o «hacia 1900», «antes de 1900», «después de 1900»."
+
+msgid "Let's explore!"
+msgstr "¡A explorar!"
+
+msgid "Level %s"
+msgstr "Nivel %s"
+
+msgid "Link copied!"
+msgstr "¡Enlace copiado!"
+
+msgid "Link existing"
+msgstr "Enlazar existente"
+
+msgid "List"
+msgstr "Lista"
+
+msgid "Loading tree…"
+msgstr "Cargando árbol…"
+
+msgid "Loading…"
+msgstr "Cargando…"
+
+msgid "Make this person the centre of the fan"
+msgstr "Hacer a esta persona el centro del abanico"
+
+msgid "Male"
+msgstr "Hombre"
+
+msgid "Mark as divorced"
+msgstr "Marcar divorcio"
+
+msgid "Marriage"
+msgstr "Matrimonio"
+
+msgid "Maternal grandfather"
+msgstr "Abuelo materno"
+
+msgid "Maternal grandmother"
+msgstr "Abuela materna"
+
+msgid "Maximum nodes for administrators"
+msgstr "Máximo de nodos para administradores"
+
+msgid "Maximum nodes for logged-in users"
+msgstr "Máximo de nodos para usuarios registrados"
+
+msgid "Maximum nodes for visitors"
+msgstr "Máximo de nodos para visitantes"
+
+msgid "Maximum number of cards the tree animates when it reorganises (0 = no limit). Lower it if large trees feel sluggish."
+msgstr "Número máximo de tarjetas que el árbol anima al reorganizarse (0 = sin límite). Bájalo si los árboles grandes van a tirones."
+
+msgid "Media"
+msgstr "Multimedia"
+
+msgid "Meet each person"
+msgstr "Conoce a cada persona"
+
+msgid "Month"
+msgstr "Mes"
+
+msgid "More information"
+msgstr "Más información"
+
+msgid "More results"
+msgstr "Más resultados"
+
+msgid "Mother"
+msgstr "Madre"
+
+msgid "Move around the tree"
+msgstr "Muévete por el árbol"
+
+msgid "New person"
+msgstr "Nueva persona"
+
+msgid "Next"
+msgstr "Siguiente"
+
+msgid "Next month"
+msgstr "Mes siguiente"
+
+msgid "Next year"
+msgstr "Año siguiente"
+
+msgid "No data available"
+msgstr "No hay datos disponibles"
+
+msgid "No dated events."
+msgstr "Sin eventos con fecha."
+
+msgid "No matches."
+msgstr "Sin resultados."
+
+msgid "No relationship could be found between them."
+msgstr "No se ha encontrado ningún parentesco entre ellos."
+
+msgid "No results"
+msgstr "Sin resultados"
+
+msgid "Node limits"
+msgstr "Límites de nodos"
+
+msgid "Occupation"
+msgstr "Profesión"
+
+msgid "Off (use depths)"
+msgstr "Desactivado (usar profundidades)"
+
+msgid "Only the family link is removed — no person is deleted."
+msgstr "Solo se quita el vínculo familiar: no se elimina a ninguna persona."
+
+msgid "Open calendar"
+msgstr "Abrir calendario"
+
+msgid "Open family tree"
+msgstr "Abrir árbol genealógico"
+
+msgid "Open full record"
+msgstr "Abrir ficha completa"
+
+msgid "Open the interactive tree on a full screen and navigate between all your relatives."
+msgstr "Abre el árbol interactivo a pantalla completa y navega entre todos tus familiares."
+
+msgid "Open the record"
+msgstr "Abrir la ficha"
+
+msgid "Options"
+msgstr "Opciones"
+
+msgid "Or drag & drop an image here"
+msgstr "O arrastra y suelta una imagen aquí"
+
+msgid "Parent"
+msgstr "Progenitor"
+
+msgid "Parents"
+msgstr "Padres"
+
+msgid "Paternal grandfather"
+msgstr "Abuelo paterno"
+
+msgid "Paternal grandmother"
+msgstr "Abuela paterna"
+
+msgid "Pedigree"
+msgstr "Pedigrí"
+
+msgid "Pending approval"
+msgstr "Pendiente de aprobación"
+
+msgid "Person"
+msgstr "Persona"
+
+msgid "Photos"
+msgstr "Fotos"
+
+msgid "Place"
+msgstr "Lugar"
+
+msgid "Preparing the image…"
+msgstr "Preparando la imagen…"
+
+msgid "Previous"
+msgstr "Anterior"
+
+msgid "Previous month"
+msgstr "Mes anterior"
+
+msgid "Previous year"
+msgstr "Año anterior"
+
+msgid "Print"
+msgstr "Imprimir"
+
+msgid "Refresh"
+msgstr "Actualizar"
+
+msgid "Relationship"
+msgstr "Parentesco"
+
+msgid "Religion"
+msgstr "Religión"
+
+msgid "Remove"
+msgstr "Quitar a"
+
+msgid "Remove from family"
+msgstr "Quitar de la familia"
+
+msgid "Remove links"
+msgstr "Quitar vínculos"
+
+msgid "Residence"
+msgstr "Residencia"
+
+msgid "Save"
+msgstr "Guardar"
+
+msgid "Save and add more details"
+msgstr "Guardar y añadir más detalles"
+
+msgid "Save drawing (SVG)"
+msgstr "Guardar dibujo (SVG)"
+
+msgid "Save image"
+msgstr "Guardar imagen"
+
+msgid "Save the tree as a scalable drawing (SVG)"
+msgstr "Guardar el árbol como dibujo escalable (SVG)"
+
+msgid "Save the tree as an image (PNG)"
+msgstr "Guardar el árbol como imagen (PNG)"
+
+msgid "Saved"
+msgstr "Guardado"
+
+msgid "Saved — awaiting moderator approval"
+msgstr "Guardado: pendiente de aprobación del moderador"
+
+msgid "Saving…"
+msgstr "Guardando…"
+
+msgid "Search individuals"
+msgstr "Buscar personas"
+
+msgid "Searching…"
+msgstr "Buscando…"
+
+msgid "See children"
+msgstr "Ver los hijos"
+
+msgid "Server error — please try again in a moment"
+msgstr "Error del servidor, inténtalo de nuevo en un momento"
+
+msgid "Session expired — reload the page and try again"
+msgstr "La sesión ha caducado: recarga la página e inténtalo de nuevo"
+
+msgid "Sex"
+msgstr "Sexo"
+
+msgid "Share link"
+msgstr "Compartir enlace"
+
+msgid "Show a “Family tree” button in the main menu"
+msgstr "Mostrar un botón de “Árbol genealógico” en el menú principal"
+
+msgid "Show dates by default"
+msgstr "Mostrar fechas por defecto"
+
+msgid "Show more ancestors"
+msgstr "Ver más antepasados"
+
+msgid "Show photos by default"
+msgstr "Mostrar fotos por defecto"
+
+msgid "Show their close family"
+msgstr "Ver su familia cercana"
+
+msgid "Sibling"
+msgstr "Hermano/a"
+
+msgid "Siblings"
+msgstr "Hermanos"
+
+msgid "Sister"
+msgstr "Hermana"
+
+msgid "Skip tutorial"
+msgstr "Saltar tutorial"
+
+msgid "Slots to add missing parents"
+msgstr "Huecos para añadir padres"
+
+msgid "Son"
+msgstr "Hijo"
+
+msgid "Spouse"
+msgstr "Cónyuge"
+
+msgid "Spouses"
+msgstr "Cónyuges"
+
+msgid "Surname"
+msgstr "Apellidos"
+
+msgid "Switch to dark theme"
+msgstr "Cambiar al tema oscuro"
+
+msgid "Switch to light theme"
+msgstr "Cambiar al tema claro"
+
+msgid "Tap any card and open “Details” (bottom left) to see that person: dates, photos and family. The arrows at the top take you back."
+msgstr "Toca cualquier tarjeta y abre «Detalles» (abajo a la izquierda) para ver su ficha: fechas, fotos y su familia. Con las flechas de arriba vuelves atrás."
+
+msgid "Tap any card to see that person's details: dates, photos and family. The tree rearranges around whoever you choose — the arrows at the top take you back."
+msgstr "Toca cualquier tarjeta para ver su ficha: fechas, fotos y su familia. El árbol se reordena alrededor de quien elijas; con las flechas de arriba vuelves atrás."
+
+msgid "Text size"
+msgstr "Tamaño del texto"
+
+msgid "That family already has both spouses."
+msgstr "Esa familia ya tiene ambos cónyuges."
+
+msgid "That person already belongs to this family."
+msgstr "Esa persona ya pertenece a esta familia."
+
+msgid "The + button under each card adds parents, partners or children. Tapping a union line lets you edit or remove that relationship — nothing is final until it is approved."
+msgstr "El botón + bajo cada tarjeta añade padres, parejas o hijos. Tocando una línea de unión puedes corregir o quitar esa relación; nada es definitivo hasta que se aprueba."
+
+msgid "The change could not be saved"
+msgstr "No se pudo guardar el cambio"
+
+msgid "The chosen person has no editable family to link through — use \"New person\" instead."
+msgstr "La persona elegida no tiene una familia editable a la que enlazar; usa \"Nueva persona\"."
+
+msgid "The image is too large to export. Try the SVG format instead."
+msgstr "La imagen es demasiado grande para exportarla. Prueba el formato SVG."
+
+msgid "The interactive tree needs JavaScript. You can still browse the records directly."
+msgstr "El árbol interactivo necesita JavaScript. Puedes seguir consultando las fichas directamente."
+
+msgid "The maximum number of individuals rendered in a single tree, by role. Requests for more are truncated."
+msgstr "Número máximo de individuos dibujados en un árbol, por rol. Las peticiones que lo superen se truncan."
+
+msgid "The person and all their facts will be deleted, and they will be removed from every family they belong to."
+msgstr "Se eliminará a la persona con todos sus datos y se la quitará de todas las familias a las que pertenece."
+
+msgid "The relationship could not be loaded."
+msgstr "No se pudo calcular el parentesco."
+
+msgid "The search failed. Please try again."
+msgstr "No se pudo buscar. Inténtalo de nuevo."
+
+msgid "The server is taking too long. Check the record to see whether the change was saved before trying again."
+msgstr "El servidor tarda demasiado. Comprueba en la ficha si el cambio llegó a guardarse antes de repetirlo."
+
+msgid "The tree could not be loaded. Check your connection and try again."
+msgstr "No se pudo cargar el árbol. Comprueba la conexión e inténtalo de nuevo."
+
+msgid "The tree is very large and will be printed shrunk onto one sheet. “Save image” usually gives a better result. Print anyway?"
+msgstr "El árbol es muy grande y se imprimirá reducido en una sola hoja. «Guardar imagen» suele dar mejor resultado. ¿Imprimir igualmente?"
+
+msgid "The tree is very large, so only part of it is shown. Select a person to see more of their branch."
+msgstr "El árbol es muy grande y se muestra solo una parte. Toca a una persona para ver más de su rama."
+
+msgid "The union (the family record) will be deleted. No person is deleted."
+msgstr "Se eliminará la unión (el registro de familia). No se elimina a ninguna persona."
+
+msgid "Theme"
+msgstr "Tema"
+
+msgid "There are more results: also type the surname"
+msgstr "Hay más resultados: escribe también el apellido"
+
+msgid "There are other relationship paths."
+msgstr "Hay otros caminos de parentesco."
+
+msgid "These actions are irreversible once approved. Use them with care."
+msgstr "Acciones irreversibles tras su aprobación. Úsalas con cuidado."
+
+msgid "This fact will be permanently deleted."
+msgstr "Se eliminará este dato definitivamente."
+
+msgid "This person already has a father and a mother. If you continue, a second family will be created (for example, an adoptive one). Are you sure you want to add another parent?"
+msgstr "Esta persona ya tiene padre y madre. Si continúas se creará una segunda familia (por ejemplo, adoptiva). ¿Seguro que quieres añadir otro progenitor?"
+
+msgid "This person has no family yet. Create the child with \"New person\" — that also creates the family."
+msgstr "Esta persona aún no tiene familia. Crea el hijo/a en \"Nueva persona\": eso crea también la familia."
+
+msgid "This union has children and cannot be deleted whole. Remove each member individually instead."
+msgstr "La unión tiene hijos y no puede eliminarse entera. Quita cada miembro individualmente."
+
+msgid "Timeline"
+msgstr "Línea de tiempo"
+
+msgid "Title"
+msgstr "Título"
+
+msgid "Tree"
+msgstr "Árbol"
+
+msgid "Tree re-centred on %s — use ← to go back"
+msgstr "Árbol re-centrado en %s — usa ← para volver"
+
+msgid "Tree view"
+msgstr "Vista de árbol"
+
+msgid "Try again"
+msgstr "Reintentar"
+
+msgid "Type"
+msgstr "Tipo"
+
+msgid "Type a name in the search box (highlighted) and jump straight to that person, wherever they are in the tree."
+msgstr "Escribe un nombre en el buscador (resaltado) y salta directo a esa persona, esté donde esté del árbol."
+
+msgid "Type a name or XREF…"
+msgstr "Escribe un nombre…"
+
+msgid "Type description"
+msgstr "Descripción del tipo"
+
+msgid "Unknown"
+msgstr "Desconocido"
+
+msgid "Use the mouse wheel, pinch with two fingers, or tap twice. The + and − buttons (highlighted) also work, and the house button re-frames the whole tree."
+msgstr "Usa la rueda del ratón, junta o separa dos dedos, o toca dos veces seguidas. Los botones + y − (resaltados) también sirven, y el botón de la casita re-encuadra el árbol entero."
+
+msgid "Value"
+msgstr "Valor"
+
+msgid "Very extended family"
+msgstr "Familia muy extensa"
+
+msgid "View"
+msgstr "Vista"
+
+msgid "View the tutorial"
+msgstr "Ver el tutorial"
+
+msgid "Views"
+msgstr "Vistas"
+
+msgid "What the colours mean"
+msgstr "Qué significan los colores"
+
+msgid "When set, the tree shows everyone within this many kinship links, replacing the ancestor/descendant depths. Spouse links are free, so a couple always appears together."
+msgstr "Si se activa, el árbol muestra a todos dentro de estos enlaces de parentesco, sustituyendo las profundidades de ascendientes/descendientes. Los enlaces de cónyuge no cuentan, así que una pareja siempre aparece junta."
+
+msgid "Which views the tree switcher offers. The family tree view is always available."
+msgstr "Qué vistas ofrece el conmutador del árbol. La vista de árbol familiar está siempre disponible."
+
+msgid "Wife"
+msgstr "Mujer"
+
+msgid "Year"
+msgstr "Año"
+
+msgid "You can also use the + button on any tree card."
+msgstr "También puedes usar el botón + de cada tarjeta del árbol."
+
+msgid "You do not have permission to edit this person."
+msgstr "No tienes permiso para editar a esta persona."
+
+msgid "You have been signed out — log in and try again"
+msgstr "Se ha cerrado la sesión: vuelve a iniciar sesión e inténtalo de nuevo"
+
+msgid "Zoom in"
+msgstr "Acercar"
+
+msgid "Zoom in and out"
+msgstr "Acerca y aleja"
+
+msgid "Zoom out"
+msgstr "Alejar"
+
+msgid "about"
+msgstr "hacia"
+
+msgid "after"
+msgstr "después de"
+
+msgid "and"
+msgstr "y"
+
+msgid "before"
+msgstr "antes de"
+
+msgid "child of"
+msgstr "de la familia de"
+
+msgid "daughter of"
+msgstr "hija de"
+
+msgid "e.g. 12/01/1900"
+msgstr "p. ej. 12/01/1900"
+
+msgid "family of"
+msgstr "familia de"
+
+msgid "of"
+msgstr "de"
+
+msgid "private information"
+msgstr "información privada"
+
+msgid "son of"
+msgstr "hijo de"

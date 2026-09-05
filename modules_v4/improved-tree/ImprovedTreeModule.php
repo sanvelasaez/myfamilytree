@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ImprovedTree;
 
 use Fisharebest\Algorithm\Dijkstra;
+use Fisharebest\Localization\Translation;
 use Fisharebest\Webtrees\Age;
 use Fisharebest\Webtrees\Auth;
 use Fisharebest\Webtrees\Date;
@@ -132,6 +133,16 @@ final class ImprovedTreeModule extends AbstractModule implements
         return self::CUSTOM_VERSION;
     }
 
+    /**
+     * webtrees compara customModuleVersion() con el contenido de esta URL y
+     * avisa en el panel cuando hay versión nueva. latest-version.txt lo
+     * mantiene alineado scripts/sync-version.js (fuente: CUSTOM_VERSION).
+     */
+    public function customModuleLatestVersionUrl(): string
+    {
+        return 'https://raw.githubusercontent.com/sanvelasaez/improved-tree/master/latest-version.txt';
+    }
+
     public function title(): string
     {
         return self::CUSTOM_TITLE;
@@ -154,8 +165,19 @@ final class ImprovedTreeModule extends AbstractModule implements
 
     public function headContent(): string
     {
-        return '<link rel="stylesheet" href="' . e($this->assetUrl('css/improved-tree.css')) . '">' .
+        $html = '<link rel="stylesheet" href="' . e($this->assetUrl('css/improved-tree.css')) . '">' .
             '<script src="' . e($this->assetUrl('js/improved-tree.js')) . '"></script>';
+
+        // UI strings for the JS bundle, in the page language. JSON_HEX_TAG
+        // keeps any '</script>' inside a translation from breaking out of the
+        // element. When absent (English) the bundle uses its built-in texts.
+        $labels = $this->jsLabels();
+        if ($labels !== []) {
+            $html .= '<script type="application/json" id="itree-l10n">' .
+                json_encode($labels, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) . '</script>';
+        }
+
+        return $html;
     }
 
     // Menu interface methods — puts an "access the tree" button on every page,
@@ -193,136 +215,85 @@ final class ImprovedTreeModule extends AbstractModule implements
         );
     }
 
+    /** @var array<string, array<string, string>> Per-request cache: headContent() re-reads the catalogue. */
+    private array $translations_cache = [];
+
     /**
-     * Spanish labels for this module's own strings (webtrees only ships
+     * Translations for this module's own strings (webtrees only ships
      * translations for its core strings, not custom-module ones).
+     *
+     * One gettext .po file per language in resources/lang/ — see the
+     * 'Traducciones' section of the README. Missing files, missing entries
+     * and empty msgstr all fall back to the English source text.
      *
      * @return array<string, string>
      */
     public function customTranslations(string $language): array
     {
-        if (str_starts_with($language, 'es')) {
-            return [
-                'Interactive tree'                => 'Árbol interactivo',
-                'Improved tree of %s'             => 'Árbol interactivo de %s',
-                'Branch colours'                  => 'Colores por rama',
-                'Slots to add missing parents'    => 'Huecos para añadir padres',
-                'Fan view'                        => 'Vista de abanico',
-                'Animation card limit'            => 'Límite de tarjetas animadas',
-                'Maximum number of cards the tree animates when it reorganises (0 = no limit). Lower it if large trees feel sluggish.' => 'Número máximo de tarjetas que el árbol anima al reorganizarse (0 = sin límite). Bájalo si los árboles grandes van a tirones.',
-                'Generations of ancestors'        => 'Generaciones de ascendientes',
-                'Pedigree'                        => 'Pedigrí',
-                'Surnames'                        => 'Apellidos',
-                'Views'                           => 'Vistas',
-                'Theme'                           => 'Tema',
-                'Which views the tree switcher offers. The family tree view is always available.'
-                                                  => 'Qué vistas ofrece el conmutador del árbol. La vista de árbol familiar está siempre disponible.',
-                'View'                            => 'Vista',
-                'Tree'                            => 'Árbol',
-                'Fan'                             => 'Abanico',
-                'List'                            => 'Lista',
-                '%1$s is the %2$s of %3$s'        => '%1$s es %2$s de %3$s',
-                'Collapse'                        => 'Contraer',
-                'The tree is very large, so only part of it is shown. Select a person to see more of their branch.'
-                                                  => 'El árbol es muy grande y se muestra solo una parte. Toca a una persona para ver más de su rama.',
-                'Defaults'                        => 'Valores por defecto',
-                'Default ancestor depth'          => 'Profundidad de ascendientes por defecto',
-                'Default descendant depth'        => 'Profundidad de descendientes por defecto',
-                'Include spouses by default'      => 'Incluir cónyuges por defecto',
-                'Include siblings by default'     => 'Incluir hermanos por defecto',
-                'Show photos by default'          => 'Mostrar fotos por defecto',
-                'Show dates by default'           => 'Mostrar fechas por defecto',
-                'Node limits'                     => 'Límites de nodos',
-                'The maximum number of individuals rendered in a single tree, by role. Requests for more are truncated.'
-                                                  => 'Número máximo de individuos dibujados en un árbol, por rol. Las peticiones que lo superen se truncan.',
-                'Maximum nodes for visitors'      => 'Máximo de nodos para visitantes',
-                'Maximum nodes for logged-in users'
-                                                  => 'Máximo de nodos para usuarios registrados',
-                'Maximum nodes for administrators'
-                                                  => 'Máximo de nodos para administradores',
-                'Kinship level'                   => 'Nivel de parentesco',
-                'Default kinship level'           => 'Nivel de parentesco por defecto',
-                'When set, the tree shows everyone within this many kinship links, replacing the ancestor/descendant depths. Spouse links are free, so a couple always appears together.'
-                                                  => 'Si se activa, el árbol muestra a todos dentro de estos enlaces de parentesco, sustituyendo las profundidades de ascendientes/descendientes. Los enlaces de cónyuge no cuentan, así que una pareja siempre aparece junta.',
-                'Off (use depths)'                => 'Desactivado (usar profundidades)',
-                'Level %s'                        => 'Nivel %s',
-                'Ancestor depth'                  => 'Profundidad de ascendientes',
-                'Descendant depth'                => 'Profundidad de descendientes',
-                'Siblings'                        => 'Hermanos',
-                'Parents'                         => 'Padres',
-                'Spouses'                         => 'Cónyuges',
-                'Children'                        => 'Hijos',
-                'Direct family'                   => 'Familia directa',
-                'Legend'                          => 'Leyenda',
-                'Main person'                     => 'Persona principal',
-                'Filiation'                       => 'Filiación',
-                'Couple'                          => 'Pareja',
-                'Starting person'                 => 'Persona inicial',
-                'Selected person'                 => 'Persona seleccionada',
-                'Parents and children'            => 'Padres e hijos',
-                'Person without details yet'      => 'Persona sin datos (desconocida)',
-                'Private information'             => 'Información privada',
-                'Also appears in another branch'  => 'Aparece también en otra rama',
-                'How much family to show'         => '¿Cuánta familia mostrar?',
-                'Choose generations manually…'    => 'Elegir generaciones a mano…',
-                'Close family only'               => 'Solo la familia cercana',
-                'Also grandparents and grandchildren'
-                                                  => 'También abuelos y nietos',
-                'Extended family (uncles, aunts and cousins)'
-                                                  => 'Familia extensa (tíos y primos)',
-                'Very extended family'            => 'Familia muy extensa',
-                'Everything possible (level %s)'  => 'Todo lo posible (nivel %s)',
-                'Generations up (ancestors)'      => 'Generaciones hacia arriba (antepasados)',
-                'Generations down (descendants)'  => 'Generaciones hacia abajo (descendientes)',
-                'Save image'                      => 'Guardar imagen',
-                'Save drawing (SVG)'              => 'Guardar dibujo (SVG)',
-                'Save the tree as an image (PNG)' => 'Guardar el árbol como imagen (PNG)',
-                'Save the tree as a scalable drawing (SVG)'
-                                                  => 'Guardar el árbol como dibujo escalable (SVG)',
-                'View the tutorial'               => 'Ver el tutorial',
-                'Generations'                     => 'Generaciones',
-                'Generations before/after this person'
-                                                  => 'Generaciones antes/después de esta persona',
-                'The interactive tree needs JavaScript. You can still browse the records directly.'
-                                                  => 'El árbol interactivo necesita JavaScript. Puedes seguir consultando las fichas directamente.',
-                'Open the record'                 => 'Abrir la ficha',
-                'Text size'                       => 'Tamaño del texto',
-                'Create individual'               => 'Crear individuo',
-                'Photos'                          => 'Fotos',
-                'Options'                         => 'Opciones',
-                'Refresh'                         => 'Actualizar',
-                'Back'                            => 'Atrás',
-                'Forward'                         => 'Adelante',
-                'History'                         => 'Historial',
-                'Search individuals'              => 'Buscar personas',
-                'Copy link'                       => 'Copiar enlace',
-                'Zoom in'                         => 'Acercar',
-                'Zoom out'                        => 'Alejar',
-                'Center on the selected person'   => 'Centrar en la persona seleccionada',
-                'Fullscreen'                      => 'Pantalla completa',
-                'Add image'                       => 'Añadir imagen',
-                'Download as PNG'                 => 'Descargar como PNG',
-                'Download as SVG'                 => 'Descargar como SVG',
-                'Print'                           => 'Imprimir',
-                'Media'                           => 'Multimedia',
-                'Previous'                        => 'Anterior',
-                'Next'                            => 'Siguiente',
-                'Open family tree'                => 'Abrir árbol genealógico',
-                'Explore the tree of %s'          => 'Explora el árbol de %s',
-                'Explore your family tree'        => 'Explora tu árbol genealógico',
-                'Open the interactive tree on a full screen and navigate between all your relatives.'
-                    => 'Abre el árbol interactivo a pantalla completa y navega entre todos tus familiares.',
-                'Open the interactive tree on a full screen, rooted on this person. Pan, zoom and jump to any relative.'
-                    => 'Abre el árbol interactivo a pantalla completa, con esta persona como raíz. Desplázate, haz zoom y salta a cualquier familiar.',
-                'Home page'                       => 'Página de inicio',
-                'Show a “Family tree” button in the main menu'
-                    => 'Mostrar un botón de “Árbol genealógico” en el menú principal',
-                'Adds a button to the main menu (shown on the home page and everywhere else) that opens the full-screen tree, rooted on the tree’s default individual.'
-                    => 'Añade un botón al menú principal (visible en la página de inicio y en el resto) que abre el árbol a pantalla completa, con el individuo por defecto del árbol como raíz.',
-            ];
+        if (!array_key_exists($language, $this->translations_cache)) {
+            $this->translations_cache[$language] = $this->loadTranslationFile($language);
+        }
+
+        return $this->translations_cache[$language];
+    }
+
+    private function loadTranslationFile(string $language): array
+    {
+        $lang_dir = $this->resourcesFolder() . 'lang/';
+
+        // Exact tag first (es-MX), then its base language (es).
+        $candidates = [$language];
+        $dash = strpos($language, '-');
+        if ($dash !== false) {
+            $candidates[] = substr($language, 0, $dash);
+        }
+
+        foreach ($candidates as $tag) {
+            $file = $lang_dir . $tag . '.po';
+            if (is_file($file)) {
+                return (new Translation($file))->asArray();
+            }
         }
 
         return [];
+    }
+
+    /**
+     * The JS bundle's UI strings (key => translated text), built from
+     * resources/lang/js-labels.json (key => English source) and the same .po
+     * catalogue as the PHP strings. Looked up raw — never through
+     * I18N::translate(), whose sprintf() would choke on the JS-side
+     * placeholders (%1, %2).
+     *
+     * @return array<string, string> Only keys whose translation differs from
+     *                               the English built into the JS bundle.
+     */
+    private function jsLabels(): array
+    {
+        $file = $this->resourcesFolder() . 'lang/js-labels.json';
+        if (!is_file($file)) {
+            return [];
+        }
+
+        $map = json_decode((string) file_get_contents($file), true);
+        if (!is_array($map)) {
+            return [];
+        }
+
+        $dictionary = $this->customTranslations(I18N::languageTag());
+        if ($dictionary === []) {
+            return [];
+        }
+
+        $labels = [];
+        foreach ($map as $key => $msgid) {
+            $translated = $dictionary[$msgid] ?? $msgid;
+            if ($translated !== $msgid) {
+                $labels[$key] = $translated;
+            }
+        }
+
+        return $labels;
     }
 
     // Block interface methods — lets users add an "open the tree" button to the

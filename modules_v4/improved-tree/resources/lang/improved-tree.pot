@@ -1,0 +1,873 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: improved-tree\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "%1 of %2 people"
+msgstr ""
+
+msgid "%1$s is the %2$s of %3$s"
+msgstr ""
+
+msgid "%s years old"
+msgstr ""
+
+msgid "Add"
+msgstr ""
+
+msgid "Add a father or mother first; siblings are added to the parents’ family."
+msgstr ""
+
+msgid "Add child"
+msgstr ""
+
+msgid "Add event"
+msgstr ""
+
+msgid "Add fact"
+msgstr ""
+
+msgid "Add father"
+msgstr ""
+
+msgid "Add father/mother"
+msgstr ""
+
+msgid "Add image"
+msgstr ""
+
+msgid "Add individual"
+msgstr ""
+
+msgid "Add mother"
+msgstr ""
+
+msgid "Add relative"
+msgstr ""
+
+msgid "Add relatives"
+msgstr ""
+
+msgid "Add sibling"
+msgstr ""
+
+msgid "Add spouse"
+msgstr ""
+
+msgid "Add the missing spouse"
+msgstr ""
+
+msgid "Add your family"
+msgstr ""
+
+msgid "Adds a button to the main menu (shown on the home page and everywhere else) that opens the full-screen tree, rooted on the tree’s default individual."
+msgstr ""
+
+msgid "Also appears in another branch"
+msgstr ""
+
+msgid "Also grandparents and grandchildren"
+msgstr ""
+
+msgid "Animation card limit"
+msgstr ""
+
+msgid "Approve"
+msgstr ""
+
+msgid "Approving…"
+msgstr ""
+
+msgid "Back"
+msgstr ""
+
+msgid "Baptism"
+msgstr ""
+
+msgid "Birth"
+msgstr ""
+
+msgid "Birthday coming up!"
+msgstr ""
+
+msgid "Blue is a man, pink is a woman, and gold marks the selected person. Dashed cards are people not yet recorded."
+msgstr ""
+
+msgid "Both parents already exist — this will create a second family for this person."
+msgstr ""
+
+msgid "Both parents already exist. To link another parent, edit the family in webtrees."
+msgstr ""
+
+msgid "Brother"
+msgstr ""
+
+msgid "Burial"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "Center on the selected person"
+msgstr ""
+
+msgid "Center the fan on this person"
+msgstr ""
+
+msgid "Change"
+msgstr ""
+
+msgid "Change approved"
+msgstr ""
+
+msgid "Child"
+msgstr ""
+
+msgid "Children"
+msgstr ""
+
+msgid "Choose a file"
+msgstr ""
+
+msgid "Choose a person first."
+msgstr ""
+
+msgid "Choose an image file first."
+msgstr ""
+
+msgid "Choose generations manually…"
+msgstr ""
+
+msgid "Choose month and year"
+msgstr ""
+
+msgid "Christening"
+msgstr ""
+
+msgid "Close"
+msgstr ""
+
+msgid "Close family only"
+msgstr ""
+
+msgid "Collapse"
+msgstr ""
+
+msgid "Continue"
+msgstr ""
+
+msgid "Control panel"
+msgstr ""
+
+msgid "Could not load information."
+msgstr ""
+
+msgid "Could not load the edit data. Try again."
+msgstr ""
+
+msgid "Create individual"
+msgstr ""
+
+msgid "Cremation"
+msgstr ""
+
+msgid "Custom event"
+msgstr ""
+
+msgid "Custom fact"
+msgstr ""
+
+msgid "Date"
+msgstr ""
+
+msgid "Daughter"
+msgstr ""
+
+msgid "Death"
+msgstr ""
+
+msgid "Default ancestor depth"
+msgstr ""
+
+msgid "Default descendant depth"
+msgstr ""
+
+msgid "Default kinship level"
+msgstr ""
+
+msgid "Defaults"
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "Delete individual"
+msgstr ""
+
+msgid "Delete person"
+msgstr ""
+
+msgid "Delete relationship"
+msgstr ""
+
+msgid "Details"
+msgstr ""
+
+msgid "Died at age %s"
+msgstr ""
+
+msgid "Direct family"
+msgstr ""
+
+msgid "Discard the changes?"
+msgstr ""
+
+msgid "Divorced"
+msgstr ""
+
+msgid "Done"
+msgstr ""
+
+msgid "Drag the background with your finger or the mouse to travel through your family."
+msgstr ""
+
+msgid "Edit"
+msgstr ""
+
+msgid "Edit individual"
+msgstr ""
+
+msgid "Edit relationship"
+msgstr ""
+
+msgid "Education"
+msgstr ""
+
+msgid "Enlarge photo"
+msgstr ""
+
+msgid "Enter at least a given name or a surname."
+msgstr ""
+
+msgid "Events"
+msgstr ""
+
+msgid "Everything possible (level %s)"
+msgstr ""
+
+msgid "Explore your family tree"
+msgstr ""
+
+msgid "Extended family (uncles, aunts and cousins)"
+msgstr ""
+
+msgid "Family"
+msgstr ""
+
+msgid "Family tree"
+msgstr ""
+
+msgid "Fan"
+msgstr ""
+
+msgid "Fan view"
+msgstr ""
+
+msgid "Father"
+msgstr ""
+
+msgid "Father/Mother"
+msgstr ""
+
+msgid "Female"
+msgstr ""
+
+msgid "File"
+msgstr ""
+
+msgid "Fill in at least one field."
+msgstr ""
+
+msgid "Find someone"
+msgstr ""
+
+msgid "Forward"
+msgstr ""
+
+msgid "Full screen: pan, zoom and jump between relatives."
+msgstr ""
+
+msgid "Fullscreen"
+msgstr ""
+
+msgid "Gallery"
+msgstr ""
+
+msgid "Generations"
+msgstr ""
+
+msgid "Generations before/after this person"
+msgstr ""
+
+msgid "Generations down (descendants)"
+msgstr ""
+
+msgid "Generations of ancestors"
+msgstr ""
+
+msgid "Generations up (ancestors)"
+msgstr ""
+
+msgid "Given names"
+msgstr ""
+
+msgid "Hide this branch"
+msgstr ""
+
+msgid "Home page"
+msgstr ""
+
+msgid "How are we related?"
+msgstr ""
+
+msgid "How much family to show"
+msgstr ""
+
+msgid "How to use the tree"
+msgstr ""
+
+msgid "Husband"
+msgstr ""
+
+msgid "Image upload is not available."
+msgstr ""
+
+msgid "Improved tree of %s"
+msgstr ""
+
+msgid "Include siblings by default"
+msgstr ""
+
+msgid "Include spouses by default"
+msgstr ""
+
+msgid "Information restricted for privacy."
+msgstr ""
+
+msgid "Interactive family tree"
+msgstr ""
+
+msgid "Interactive tree"
+msgstr ""
+
+msgid "Invalid date. Use dd/mm/yyyy, just the year (1900), or \"about 1900\", \"before 1900\", \"after 1900\"."
+msgstr ""
+
+msgid "Layout"
+msgstr ""
+
+msgid "Let's explore!"
+msgstr ""
+
+msgid "Level %s"
+msgstr ""
+
+msgid "Link copied!"
+msgstr ""
+
+msgid "Link existing"
+msgstr ""
+
+msgid "List"
+msgstr ""
+
+msgid "Loading tree…"
+msgstr ""
+
+msgid "Loading…"
+msgstr ""
+
+msgid "Make this person the centre of the fan"
+msgstr ""
+
+msgid "Male"
+msgstr ""
+
+msgid "Mark as divorced"
+msgstr ""
+
+msgid "Marriage"
+msgstr ""
+
+msgid "Maternal grandfather"
+msgstr ""
+
+msgid "Maternal grandmother"
+msgstr ""
+
+msgid "Maximum nodes for administrators"
+msgstr ""
+
+msgid "Maximum nodes for logged-in users"
+msgstr ""
+
+msgid "Maximum nodes for visitors"
+msgstr ""
+
+msgid "Maximum number of cards the tree animates when it reorganises (0 = no limit). Lower it if large trees feel sluggish."
+msgstr ""
+
+msgid "Media"
+msgstr ""
+
+msgid "Meet each person"
+msgstr ""
+
+msgid "Modules"
+msgstr ""
+
+msgid "Month"
+msgstr ""
+
+msgid "More information"
+msgstr ""
+
+msgid "More results"
+msgstr ""
+
+msgid "Mother"
+msgstr ""
+
+msgid "Move around the tree"
+msgstr ""
+
+msgid "New person"
+msgstr ""
+
+msgid "Next"
+msgstr ""
+
+msgid "Next month"
+msgstr ""
+
+msgid "Next year"
+msgstr ""
+
+msgid "No data available"
+msgstr ""
+
+msgid "No dated events."
+msgstr ""
+
+msgid "No matches."
+msgstr ""
+
+msgid "No relationship could be found between them."
+msgstr ""
+
+msgid "No results"
+msgstr ""
+
+msgid "Node limits"
+msgstr ""
+
+msgid "Occupation"
+msgstr ""
+
+msgid "Off (use depths)"
+msgstr ""
+
+msgid "Only the family link is removed — no person is deleted."
+msgstr ""
+
+msgid "Open calendar"
+msgstr ""
+
+msgid "Open family tree"
+msgstr ""
+
+msgid "Open full record"
+msgstr ""
+
+msgid "Open the interactive tree on a full screen and navigate between all your relatives."
+msgstr ""
+
+msgid "Open the record"
+msgstr ""
+
+msgid "Options"
+msgstr ""
+
+msgid "Or drag & drop an image here"
+msgstr ""
+
+msgid "Parent"
+msgstr ""
+
+msgid "Parents"
+msgstr ""
+
+msgid "Paternal grandfather"
+msgstr ""
+
+msgid "Paternal grandmother"
+msgstr ""
+
+msgid "Pedigree"
+msgstr ""
+
+msgid "Pending approval"
+msgstr ""
+
+msgid "Person"
+msgstr ""
+
+msgid "Photos"
+msgstr ""
+
+msgid "Place"
+msgstr ""
+
+msgid "Preparing the image…"
+msgstr ""
+
+msgid "Previous"
+msgstr ""
+
+msgid "Previous month"
+msgstr ""
+
+msgid "Previous year"
+msgstr ""
+
+msgid "Print"
+msgstr ""
+
+msgid "Refresh"
+msgstr ""
+
+msgid "Relationship"
+msgstr ""
+
+msgid "Religion"
+msgstr ""
+
+msgid "Remove"
+msgstr ""
+
+msgid "Remove from family"
+msgstr ""
+
+msgid "Remove links"
+msgstr ""
+
+msgid "Residence"
+msgstr ""
+
+msgid "Save"
+msgstr ""
+
+msgid "Save and add more details"
+msgstr ""
+
+msgid "Save drawing (SVG)"
+msgstr ""
+
+msgid "Save image"
+msgstr ""
+
+msgid "Save the tree as a scalable drawing (SVG)"
+msgstr ""
+
+msgid "Save the tree as an image (PNG)"
+msgstr ""
+
+msgid "Saved"
+msgstr ""
+
+msgid "Saved — awaiting moderator approval"
+msgstr ""
+
+msgid "Saving…"
+msgstr ""
+
+msgid "Search individuals"
+msgstr ""
+
+msgid "Searching…"
+msgstr ""
+
+msgid "See children"
+msgstr ""
+
+msgid "Server error — please try again in a moment"
+msgstr ""
+
+msgid "Session expired — reload the page and try again"
+msgstr ""
+
+msgid "Sex"
+msgstr ""
+
+msgid "Share link"
+msgstr ""
+
+msgid "Show a “Family tree” button in the main menu"
+msgstr ""
+
+msgid "Show dates by default"
+msgstr ""
+
+msgid "Show more ancestors"
+msgstr ""
+
+msgid "Show photos by default"
+msgstr ""
+
+msgid "Show their close family"
+msgstr ""
+
+msgid "Sibling"
+msgstr ""
+
+msgid "Siblings"
+msgstr ""
+
+msgid "Sister"
+msgstr ""
+
+msgid "Skip tutorial"
+msgstr ""
+
+msgid "Slots to add missing parents"
+msgstr ""
+
+msgid "Son"
+msgstr ""
+
+msgid "Spouse"
+msgstr ""
+
+msgid "Spouses"
+msgstr ""
+
+msgid "Surname"
+msgstr ""
+
+msgid "Switch to dark theme"
+msgstr ""
+
+msgid "Switch to light theme"
+msgstr ""
+
+msgid "Tap any card and open “Details” (bottom left) to see that person: dates, photos and family. The arrows at the top take you back."
+msgstr ""
+
+msgid "Tap any card to see that person's details: dates, photos and family. The tree rearranges around whoever you choose — the arrows at the top take you back."
+msgstr ""
+
+msgid "Text size"
+msgstr ""
+
+msgid "That family already has both spouses."
+msgstr ""
+
+msgid "That person already belongs to this family."
+msgstr ""
+
+msgid "The + button under each card adds parents, partners or children. Tapping a union line lets you edit or remove that relationship — nothing is final until it is approved."
+msgstr ""
+
+msgid "The change could not be saved"
+msgstr ""
+
+msgid "The chosen person has no editable family to link through — use \"New person\" instead."
+msgstr ""
+
+msgid "The image is too large to export. Try the SVG format instead."
+msgstr ""
+
+msgid "The interactive tree needs JavaScript. You can still browse the records directly."
+msgstr ""
+
+msgid "The maximum number of individuals rendered in a single tree, by role. Requests for more are truncated."
+msgstr ""
+
+msgid "The person and all their facts will be deleted, and they will be removed from every family they belong to."
+msgstr ""
+
+msgid "The preferences for the module “%s” have been updated."
+msgstr ""
+
+msgid "The relationship could not be loaded."
+msgstr ""
+
+msgid "The search failed. Please try again."
+msgstr ""
+
+msgid "The server is taking too long. Check the record to see whether the change was saved before trying again."
+msgstr ""
+
+msgid "The tree could not be loaded. Check your connection and try again."
+msgstr ""
+
+msgid "The tree is very large and will be printed shrunk onto one sheet. “Save image” usually gives a better result. Print anyway?"
+msgstr ""
+
+msgid "The tree is very large, so only part of it is shown. Select a person to see more of their branch."
+msgstr ""
+
+msgid "The union (the family record) will be deleted. No person is deleted."
+msgstr ""
+
+msgid "Theme"
+msgstr ""
+
+msgid "There are more results: also type the surname"
+msgstr ""
+
+msgid "There are other relationship paths."
+msgstr ""
+
+msgid "These actions are irreversible once approved. Use them with care."
+msgstr ""
+
+msgid "This fact will be permanently deleted."
+msgstr ""
+
+msgid "This person already has a father and a mother. If you continue, a second family will be created (for example, an adoptive one). Are you sure you want to add another parent?"
+msgstr ""
+
+msgid "This person has no family yet. Create the child with \"New person\" — that also creates the family."
+msgstr ""
+
+msgid "This union has children and cannot be deleted whole. Remove each member individually instead."
+msgstr ""
+
+msgid "Timeline"
+msgstr ""
+
+msgid "Title"
+msgstr ""
+
+msgid "Tree"
+msgstr ""
+
+msgid "Tree re-centred on %s — use ← to go back"
+msgstr ""
+
+msgid "Tree view"
+msgstr ""
+
+msgid "Try again"
+msgstr ""
+
+msgid "Type"
+msgstr ""
+
+msgid "Type a name in the search box (highlighted) and jump straight to that person, wherever they are in the tree."
+msgstr ""
+
+msgid "Type a name or XREF…"
+msgstr ""
+
+msgid "Type description"
+msgstr ""
+
+msgid "Unknown"
+msgstr ""
+
+msgid "Use the mouse wheel, pinch with two fingers, or tap twice. The + and − buttons (highlighted) also work, and the house button re-frames the whole tree."
+msgstr ""
+
+msgid "Value"
+msgstr ""
+
+msgid "Vertical"
+msgstr ""
+
+msgid "Very extended family"
+msgstr ""
+
+msgid "View"
+msgstr ""
+
+msgid "View the tutorial"
+msgstr ""
+
+msgid "Views"
+msgstr ""
+
+msgid "What the colours mean"
+msgstr ""
+
+msgid "When set, the tree shows everyone within this many kinship links, replacing the ancestor/descendant depths. Spouse links are free, so a couple always appears together."
+msgstr ""
+
+msgid "Which views the tree switcher offers. The family tree view is always available."
+msgstr ""
+
+msgid "Wife"
+msgstr ""
+
+msgid "Year"
+msgstr ""
+
+msgid "You can also use the + button on any tree card."
+msgstr ""
+
+msgid "You do not have permission to edit this person."
+msgstr ""
+
+msgid "You have been signed out — log in and try again"
+msgstr ""
+
+msgid "Zoom in"
+msgstr ""
+
+msgid "Zoom in and out"
+msgstr ""
+
+msgid "Zoom out"
+msgstr ""
+
+msgid "about"
+msgstr ""
+
+msgid "after"
+msgstr ""
+
+msgid "and"
+msgstr ""
+
+msgid "before"
+msgstr ""
+
+msgid "child of"
+msgstr ""
+
+msgid "close"
+msgstr ""
+
+msgid "daughter of"
+msgstr ""
+
+msgid "e.g. 12/01/1900"
+msgstr ""
+
+msgid "family of"
+msgstr ""
+
+msgid "of"
+msgstr ""
+
+msgid "private information"
+msgstr ""
+
+msgid "save"
+msgstr ""
+
+msgid "son of"
+msgstr ""
