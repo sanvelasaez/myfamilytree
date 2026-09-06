@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # git archive produces a zip without a top-level folder, so it can be
+      # extracted straight into modules_v4/. Files marked export-ignore in
+      # .gitattributes are left out.
+      - name: Build zip
+        run: git archive --format=zip -o webtrees-modules-pack.zip HEAD
+
+      - name: Create release and upload zip
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" webtrees-modules-pack.zip --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" webtrees-modules-pack.zip \
+              --title "$GITHUB_REF_NAME" \
+              --generate-notes
+          fi

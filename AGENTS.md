@@ -22,7 +22,8 @@ This repository (`webtrees-modules-pack`) is a pack of custom webtrees modules a
 - The external example has `composer.json`, `package.json`, `webpack.config.js`, `src/`, `resources/`, `module.php` and `KriptonTheme.php`.
 - In the external example, `npm run dev` runs `webpack --watch` and syncs PHP files, views and compiled assets into `..\webtrees\modules_v4\kripton`.
 - In the external example, `npm run build` runs vendor install, lint and production webpack output into `dist/`.
-- `WEBTREES-MODULES-NOTES.md` (repo root, formerly `modules_v4/README.md`) contains the upstream webtrees module notes, but terminal output may show mojibake for smart quotes. Keep new docs ASCII unless there is a reason to use Unicode.
+- The upstream webtrees notes about `modules_v4` (folder naming rules, `.disable` trick) are summarised in `README.md` under "Notas sobre la carpeta `modules_v4`". Terminal output may show mojibake for smart quotes; keep new docs ASCII unless there is a reason to use Unicode.
+- `.github/workflows/release.yml` builds `webtrees-modules-pack.zip` with `git archive` on every `v*` tag and attaches it to a GitHub release. Files listed as `export-ignore` in `.gitattributes` are excluded from that zip.
 
 ## External Research Notes
 
